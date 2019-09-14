@@ -18,7 +18,9 @@
 
 # include markdowns
 !LICENSE
+!README
 !README.md
+!readme.txt
 
 # include git important files
 !.gitignore
