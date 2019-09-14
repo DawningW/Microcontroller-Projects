@@ -1,12 +1,14 @@
 # exclude all
 */Objects
 */Listings
-*.uvopt
+*/*/Objects
+*/*/Listings
 *.uvgui.*
 
 # sourcecode
 !*.uvmpw
 !*.uvproj
+!*.uvopt
 !*.A51
 !*.h
 !*.c
