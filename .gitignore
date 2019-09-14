@@ -1,0 +1,22 @@
+# exclude all
+*/Objects
+*/Listings
+*.uvopt
+*.uvgui.*
+
+# sourcecode
+!*.uvmpw
+!*.uvproj
+!*.A51
+!*.h
+!*.c
+
+# executables
+!*.hex
+
+# include markdowns
+!LICENSE
+!README.md
+
+# include git important files
+!.gitignore
