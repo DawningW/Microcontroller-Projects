@@ -13,4 +13,16 @@
     <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 
+  <project>
+    <PathAndName>.\serialcom\serialcom.uvproj</PathAndName>
+  </project>
+
+  <project>
+    <PathAndName>.\keyboard\keyboard.uvproj</PathAndName>
+  </project>
+
+  <project>
+    <PathAndName>.\1602A\1602A.uvproj</PathAndName>
+  </project>
+
 </ProjectWorkspace>
