@@ -387,14 +387,9 @@
               <FilePath>.\main.c</FilePath>
             </File>
             <File>
-              <FileName>serialcom.c</FileName>
+              <FileName>serialport.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\serialcom.c</FilePath>
-            </File>
-            <File>
-              <FileName>serialcom.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\serialcom.h</FilePath>
+              <FilePath>.\serialport.c</FilePath>
             </File>
           </Files>
         </Group>

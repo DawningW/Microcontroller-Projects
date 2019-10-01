@@ -1,7 +1,7 @@
 #ifndef _LCD_h_
 #define _LCD_h_
 
-#include <reg51.h>
+#include <STC89C5xRC.H>
 #include <intrins.h>
 
 // 基本数据类型
@@ -60,8 +60,7 @@ sbit LCD_E = P2^5;
  * 数据写入操作：输入: RS=高、RW=低、E=下降沿, 输出:无.
  */
 
-extern void lcd_init();
-extern void delay(uchar ms);
+extern void init_lcd();
 extern bit lcd_busy();
 #define lcd_write_cmd(cmd) lcd_write_cmd_busy(cmd, 1)
 extern void lcd_write_cmd_busy(uchar cmd, bit check_busy);

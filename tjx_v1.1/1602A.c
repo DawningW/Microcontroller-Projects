@@ -1,9 +1,10 @@
 #include "1602A.h"
+#include "timer.h"
 
 /**
  * 初始化
  */
-void lcd_init()
+void init_lcd()
 {
 	delay(15);
 	lcd_write_cmd_busy(LCD_MODE, 0);
@@ -14,25 +15,12 @@ void lcd_init()
 	delay(5);
 	lcd_write_cmd(LCD_MODE); // 8位总线, 双行, 5x7
 	delay(5);
-	lcd_write_cmd(LCD_CMD_DISPLAY_CONTROL | 0x4); // 开启显示, 关闭光标, 不闪烁
+	lcd_write_cmd(LCD_CMD_DISPLAY_CONTROL | 0x4 | 0x2); // 开启显示, 关闭光标, 不闪烁
 	delay(5);
 	lcd_write_cmd(LCD_CMD_CLR);
 	delay(5);
 	lcd_write_cmd(LCD_CMD_ENTRY_MODE | 0x2); // 光标右移, 字符不移位
 	delay(5);
-}
-
-/**
- * 延时子程序
- * 11.0592MHZ
- */
-static void delay(uchar ms)
-{
-	uchar i;
-	while (ms-- != 0)
-	{
-		for (i = 0; i < 91; i++);
-	}
 }
 
 /**

@@ -1,15 +1,9 @@
-#include <reg52.h>
+#include "keyboard.h"
+#include "timer.h"
 
-#define uchar unsigned char
-#define uint unsigned int
-
-#define KEY_PORT P1
-
-void delay(uchar ms)
+void init_keyboard()
 {
-	uchar i;
-	while (ms-- != 0)
-		for (i = 0; i < 91; i++);
+	KEY_PORT = 0xff;
 }
 
 /**
@@ -58,17 +52,4 @@ uchar scankey()
 		}
 	}
 	return 0;
-}
-
-void main()
-{
-	uchar key;
-	KEY_PORT = 0xff;
-	while (1)
-	{
-		if ((key = scankey()) > 0)
-		{
-			P0 = ~key;
-		}
-	}
 }

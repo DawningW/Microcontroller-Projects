@@ -12,9 +12,9 @@
 
 #include <reg51.h>
 #include <intrins.h>
-#include "serialcom.h"
+#include "serialport.h"
 
-sbit bit9 = P2^2;           //P2.2 show UART data bit9
+sbit bit9 = P3^7; //P3.7 show UART data bit9
 bit busy;
 
 void InitCom()
@@ -44,7 +44,7 @@ void Uart_Isr() interrupt 4
     if (RI)
     {
         RI = 0;             //Clear receive interrupt flag
-        P0 = SBUF;          //P0 show UART data
+        P2 = SBUF;          //P0 show UART data
         bit9 = RB8;         //P2.2 show parity bit
     }
     if (TI)
