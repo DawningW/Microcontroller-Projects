@@ -7,6 +7,9 @@
 // 基本数据类型
 #define uchar unsigned char
 #define uint unsigned int
+
+#define MAX_DISPLAY_CHAR 16 // 0x8F - 0x80 + 1
+#define MAX_STORE_CHAR 39
 	
 // 选择引脚
 // 若采用四线传输方式,MCU口的高四位和LCD数据口的高四位相连,传输数据时先发送高四位,再发送低四位数据

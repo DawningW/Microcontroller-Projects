@@ -44,7 +44,7 @@ void Uart_Isr() interrupt 4
     if (RI)
     {
         RI = 0;             //Clear receive interrupt flag
-        P2 = SBUF;          //P0 show UART data
+        P2 = ~SBUF;          //P0 show UART data
         bit9 = RB8;         //P2.2 show parity bit
     }
     if (TI)
