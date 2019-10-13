@@ -1,9 +1,8 @@
 #include "timer.h"
 
-ulong max_time;
-uint count;
+struct TimerItem timer0_item;
 
-void init_timer(enum TIMER tm, ulong ms)
+void init_timer(enum TIMER tm, struct TimerItem item)
 {
 	// 打开全局中断
 	EA = 1;
@@ -21,8 +20,8 @@ void init_timer(enum TIMER tm, ulong ms)
 		// 启动Timer0
 		TR0 = 1;
 		// 初始化计数器
-		max_time = ms;
-		count = 0;
+		item.count = 0;
+		timer0_item = item;
 	}
 	else if (tm == tm1)
 	{
@@ -35,12 +34,13 @@ void tm0_isr() interrupt 1
 	// 重载Timer0
 	TL0 = T1MS; // 低字节
 	TH0 = T1MS >> 8; // 高字节
-	if (count-- == 0)
+	if (timer0_item.count-- == 0)
 	{
 		// 重置计数器
-		count = max_time;
+		timer0_item.count = timer0_item.max_time;
 		// 调用监听器
-		timer_actived(tm0);
+		if (timer0_item.callback != 0)
+			timer0_item.callback(tm0);
 	}
 }
 
