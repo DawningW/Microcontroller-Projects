@@ -10,7 +10,8 @@
 #define MAX_TIME 1000
 
 #define FOSC 11059200L
-// #define MODE1T //Timer clock mode, comment this line is 12T mode, uncomment is 1T mode
+//Timer clock mode, comment this line is 12T mode, uncomment is 1T mode
+// #define MODE1T
 
 #ifdef MODE1T
 #define T1MS (65536-FOSC/1000) //1ms timer calculation method in 1T mode
@@ -20,9 +21,14 @@
 
 enum TIMER { tm0, tm1 };
 
-extern void init_timer(enum TIMER tm, ulong ms);
-extern void delay(uchar ms);
+struct TimerItem
+{
+	ulong max_time;
+	uint count;
+	void (*callback)(enum TIMER);
+};
 
-extern void timer_actived(enum TIMER tm);
+extern void init_timer(enum TIMER tm, struct TimerItem item);
+extern void delay(uchar ms);
 	
 #endif

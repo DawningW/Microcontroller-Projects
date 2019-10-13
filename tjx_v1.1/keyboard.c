@@ -1,55 +1,70 @@
 #include "keyboard.h"
-#include "timer.h"
+#include "1602A.h"
 
-void init_keyboard()
+uchar scankey();
+uchar getkey(uchar, uchar);
+
+bit key_lock;
+bit key_shift;
+uchar key;
+
+void (*keyinput)(uint);
+
+void init_keyboard(void (*callback)(uint key))
 {
-	KEY_PORT = 0xff;
+	struct IntItem item;
+	item.trigger = 1;
+	item.callback = &keypressed;
+	init_int(int0, item);
+	keyinput = callback;
+	KEY_PORT = 0x00;
+}
+
+void keypressed(enum INT i)
+{
+	if ((key = scankey()) > 0)
+	{
+		if (key == 4)
+			key_lock = !key_lock;
+		else if (key == 13)
+			key_shift = !key_shift;
+		else if (keyinput != 0)
+			keyinput(key);
+	}
 }
 
 /**
  * 线反转法扫描按键
- * 得到的按键码高位是列,低位是行
+ * 得到的按键码高位是列(x),低位是行(y)
  */
 uchar scankey()
 {
-	uchar temp, result;
+	uchar xpos, ypos;
 	KEY_PORT = 0xf0;
 	if ((KEY_PORT & 0xf0) != 0xf0)
 	{
 		delay(10); // 去抖动
 		if ((KEY_PORT & 0xf0) != 0xf0)
 		{
-			temp = KEY_PORT;
+			xpos = ~KEY_PORT & 0x0f;
+			xpos >>= 4;
+			xpos = 5 - xpos;
 			KEY_PORT = 0x0f;
-			result = temp | KEY_PORT;
+			ypos = ~KEY_PORT & 0xf0;
 			
 			while ((KEY_PORT & 0x0f) != 0x0f); // 松开检测
 			
-			switch (result)
-			{
-				default: return 0;
-				
-				case 0x7e: return 1;
-				case 0xbe: return 2;
-				case 0xde: return 3;
-				case 0xee: return 4;
-				
-				case 0x7d: return 5;
-				case 0xbd: return 6;
-				case 0xdd: return 7;
-				case 0xed: return 8;
-				
-				case 0x7b: return 9;
-				case 0xbb: return 10;
-				case 0xdb: return 11;
-				case 0xeb: return 12;
-				
-				case 0x77: return 13;
-				case 0xb7: return 14;
-				case 0xd7: return 15;
-				case 0xe7: return 16;
-			}
+			return getkey(xpos, ypos);
 		}
 	}
 	return 0;
+}
+
+uchar code chars[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
+
+uchar getkey(uchar x, uchar y)
+{
+	lcd_disp(1, 1, chars[x]);
+	lcd_disp(1, 3, chars[y]);
+	return (y - 1) * 4 + x;
 }

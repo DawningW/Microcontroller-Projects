@@ -3,10 +3,17 @@
 
 #include <STC89C5xRC.H>
 
+#define uchar unsigned char
+#define uint unsigned int
+
 enum INT { int0, int1 };
 
-extern void init_int(enum INT i);
+struct IntItem
+{
+	uchar trigger;
+	void (*callback)(enum INT);
+};
 
-extern void int_actived(enum INT i);
+extern void init_int(enum INT i, struct IntItem item);
 
 #endif

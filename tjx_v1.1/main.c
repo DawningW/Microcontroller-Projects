@@ -7,20 +7,28 @@
 
 uchar code hex[][2] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
 uchar code content[] = "HelloWorld! I'm 89C52RC running on TJX V1.1!   ";
+uchar code bell[] = {0x01, 0x1b, 0x1d, 0x19, 0x1d, 0x1b, 0x01, 0x00};
 
-uchar key;
 uchar pos;
 uchar *next_char;
 
 void run();
+void key_input(uint);
+void int_actived(enum INT);
+void timer_actived(enum TIMER tm);
 
 void main()
 {
-	init_keyboard();
+	struct IntItem iitem;
+	struct TimerItem titem;
+	init_keyboard(&key_input);
 	init_lcd();
-	init_int(int0);
-	init_int(int1);
-	init_timer(tm0, MAX_TIME);
+	iitem.trigger = 1;
+	iitem.callback = &int_actived;
+	init_int(int1, iitem);
+	titem.max_time = MAX_TIME;
+	titem.callback = &timer_actived;
+	init_timer(tm0, titem);
 	
 	lcd_set_address(0, 0);
 	for (pos = 1, next_char = content; pos < MAX_DISPLAY_CHAR; pos++, next_char++)
@@ -37,27 +45,27 @@ void main()
 
 void run()
 {
-	if ((key = scankey()) > 0)
-	{
-		lcd_set_address(1, key - 1);
-		lcd_print(hex[key - 1]);
-	}
+
+}
+
+void key_input(uint key)
+{
+	lcd_set_address(1, 5);
+	lcd_print(hex[key - 1]);
 }
 
 void int_actived(enum INT i)
 {
-	if (i == int0)
-		P35 = ~P35;
-	else if (i == int1)
-		P36 = ~P36;
+	if (i == int1)
+	{
+		// 唤醒休眠
+	}
 }
 
 void timer_actived(enum TIMER tm)
 {
-	if (tm == tm0)
+	if (tm == tm0 && 0)
 	{
-		P37 = ~P37;
-		
 		if (pos == MAX_STORE_CHAR) pos = 0;
 		if (*next_char == '\0') next_char = content;
 		lcd_disp(0, pos, *next_char);
