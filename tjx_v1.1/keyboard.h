@@ -1,20 +1,18 @@
 #ifndef __KEYBOARD_H__
 #define __KEYBOARD_H__
 
-#include <STC89C5xRC.H>
+#include "system.h"
+#include "registers.h"
 #include "interrupt.h"
 #include "timer.h"
-
-#define uchar unsigned char
-#define uint unsigned int
 
 #define KEY_PORT P1
 
 extern bit key_lock;
 extern bit key_shift;
-extern uchar key;
+extern byte key;
 
-extern void init_keyboard(void (*callback)(uint));
+extern void init_keyboard(void (*callback)(word));
 extern void keypressed(enum INT);
 
 #endif

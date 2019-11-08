@@ -48,9 +48,9 @@ void tm0_isr() interrupt 1
  * 延时子程序
  * 11.0592MHZ
  */
-void delay(uchar ms)
+void delay(byte ms)
 {
-	uchar i;
+	byte i;
 	while (ms-- != 0)
 		for (i = 0; i < 91; i++);
 }

@@ -406,6 +406,16 @@
               <FileType>1</FileType>
               <FilePath>.\1602A.c</FilePath>
             </File>
+            <File>
+              <FileName>system.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\system.h</FilePath>
+            </File>
+            <File>
+              <FileName>registers.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\registers.h</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

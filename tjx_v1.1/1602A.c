@@ -1,145 +1,92 @@
 #include "1602A.h"
 #include "timer.h"
 
-/**
- * 初始化
- */
-void init_lcd()
+void lcd_init()
 {
 	delay(15);
-	lcd_write_cmd_busy(LCD_MODE, 0);
+	lcd_write(0, LCD_CMD_MODE);
 	delay(5);
-	lcd_write_cmd_busy(LCD_MODE, 0);
+	lcd_write(0, LCD_CMD_MODE);
 	delay(5);
-	lcd_write_cmd_busy(LCD_MODE, 0);
+	lcd_write(0, LCD_CMD_MODE);
 	delay(5);
-	lcd_write_cmd(LCD_MODE); // 8位总线, 双行, 5x7
+	lcd_write_cmd(LCD_CMD_MODE); // 8位总线, 双行, 5x7
 	delay(5);
-	lcd_write_cmd(LCD_CMD_DISPLAY_CONTROL | 0x4 | 0x2); // 开启显示, 关闭光标, 不闪烁
+	lcd_write_cmd(LCD_CMD_DISPLAY | 0x4 | 0x2); // 开启显示, 关闭光标, 不闪烁
 	delay(5);
 	lcd_write_cmd(LCD_CMD_CLR);
 	delay(5);
-	lcd_write_cmd(LCD_CMD_ENTRY_MODE | 0x2); // 光标右移, 字符不移位
+	lcd_write_cmd(LCD_CMD_ENTRY | 0x2); // 光标右移, 字符不移位
+	delay(5);
+	lcd_write_cmd(LCD_CMD_RST);
 	delay(5);
 }
 
-/**
- * 检查LCD忙状态
- * 返回1时, 忙, 等待
- * 返回0时, 闲, 可写指令与数据
- */
-static bit lcd_busy()
+byte lcd_read(bit type)
 {
-	bit result;
-	LCD_RS = 0;
+	byte content;
+	LCD_RS = type;
 	LCD_RW = 1;
-	_nop_();
 	LCD_E = 1;
-	_nop_();
-	result = (bit)(LCD_DB & 0x80);
-	_nop_();
-	LCD_E = 0;
-	return result;
-}
-
-/**
- * 写指令数据
- * RS=0 RW=0 E=下降沿 D0-D7=指令
- * 注: 初始化时最初三次写指令要求不检查忙
- */
-void lcd_write_cmd_busy(uchar cmd, bit check_busy)
-{
-	while (check_busy && lcd_busy());
-	LCD_RS = 0;
-	LCD_RW = 0;
-	_nop_();
-#ifdef LCD_4DB
-	LCD_DB &= 0x0F; //清高四位
-	LCD_DB |= (cmd & 0xF0); //送高四位
-	_nop_();
-	LCD_E = 1;
-	_nop_();
-	LCD_E = 0;
-	_nop_();
-	LCD_DB &= 0x0F; //清高四位
-	LCD_DB |= (cmd << 4); //送低四位
-#endif
-#ifdef LCD_8DB
-	LCD_DB = cmd;
-#endif
-	_nop_();
-	LCD_E = 1;
-	_nop_();
-	LCD_E = 0;
-}
-
-/**
- * 设定下一个要写的字符的地址(DDRAM)
- */
-void lcd_set_address(bit row, uchar col)
-{
-		lcd_write_cmd(0x80 | (0x40 * row) | col);
-}
-
-/**
- * 写显示数据
- * RS=1 RW=0 E=下降沿 D0-D7=数据
- */
-void lcd_write_dat(uchar dat)
-{
-	while (lcd_busy());
-	LCD_RS = 1;
-	LCD_RW = 0;
-	_nop_();
-#ifdef LCD_4DB
-	LCD_DB &= 0x0F; //清高四位
-	LCD_DB |= (dat & 0xF0); //送高四位
-	_nop_();
-	LCD_E = 1;
-	_nop_();
-	LCD_E = 0;
-	LCD_DB &= 0x0F; //清高四位
-	LCD_DB |= (dat << 4); //送低四位
-#endif
-#ifdef LCD_8DB
-	LCD_DB = dat;
-#endif
-	_nop_();
-	LCD_E = 1;
-	_nop_();
-	LCD_E = 0;
-}
-
-/**
- * 读显示数据
- * RS=1 RW=1 E=1 D0-D7=数据
- */
-uchar lcd_read_dat()
-{
-	uchar dat;
-	while (lcd_busy());
-	LCD_RS = 1;
-	LCD_RW = 1;
-	_nop_();
-	LCD_E = 1;
-	_nop_();
-#ifdef LCD_4DB
+#ifdef LCD_8BIT_DB
+	content = LCD_DB;
+#else
 	// TODO 未完成
 #endif
-#ifdef LCD_8DB
-	dat = LCD_DB;
-#endif
-	return 0;
+	return content;
 }
 
-/**
- * 向CGRAM中写入自定义字符
- * 无需处理地址
- * pos 0-7 写入自定义cgram中的位置
- */ 
-void lcd_write_cgram(uchar pos, uchar *arr)
+byte lcd_read_state()
 {
-	uchar i;
+	return lcd_read(0);
+}
+
+byte lcd_read_dat()
+{
+	while (lcd_busy());
+	return lcd_read(1);
+}
+
+static bit lcd_busy()
+{
+	return (bit) (lcd_read_state() & 0x80);
+}
+
+void lcd_write(bit type, byte content)
+{
+	LCD_RS = type;
+	LCD_RW = 0;
+#ifdef LCD_8BIT_DB
+	LCD_DB = content;
+#else
+	LCD_DB &= 0x0F; //清高四位
+	LCD_DB |= (content & 0xF0); //送高四位
+	LCD_E = 1;
+	_nop_();
+	LCD_E = 0;
+	LCD_DB &= 0x0F; //清高四位
+	LCD_DB |= (content << 4); //送低四位
+#endif
+	LCD_E = 1;
+	_nop_();
+	LCD_E = 0;
+}
+
+void lcd_write_cmd(byte cmd)
+{
+	while (lcd_busy());
+	lcd_write(0, cmd);
+}
+
+void lcd_write_dat(byte dat)
+{
+	while (lcd_busy());
+	lcd_write(1, dat);
+}
+
+void lcd_write_cgram(byte pos, byte *arr)
+{
+	byte i;
 	pos <<= 3; // pos *= 8, 获得地址
 	pos |= 0x40; // 设定CGRAM地址命令
 	for (i = 0; i < 8; i++)
@@ -151,24 +98,22 @@ void lcd_write_cgram(uchar pos, uchar *arr)
 	}
 }
 
-/**
- * 显示字符串
- * 不要忘记字符数组末尾要有'\0'
- */
-void lcd_print(uchar *str)
+void lcd_set_pos(bit row, byte col)
+{
+		lcd_write_cmd(0x80 | (0x40 * row) | col);
+}
+
+void lcd_disp(bit row, byte col, byte ch)
+{
+	lcd_set_pos(row, col);
+	lcd_write_dat(ch);
+}
+
+void lcd_print(byte *str)
 {
 	while ((*str) != '\0')
 	{
 		lcd_write_dat(*str);
 		str++;
 	}
-}
-
-/**
- * 在特定位置显示字符
- */
-void lcd_disp(bit row, uchar col, uchar ch)
-{
-	lcd_set_address(row, col);
-	lcd_write_dat(ch);
 }

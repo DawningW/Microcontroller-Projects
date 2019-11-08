@@ -1,16 +1,14 @@
 #ifndef __INTERRUPT_H__
 #define __INTERRUPT_H__
 
-#include <STC89C5xRC.H>
-
-#define uchar unsigned char
-#define uint unsigned int
+#include "system.h"
+#include "registers.h"
 
 enum INT { int0, int1 };
 
 struct IntItem
 {
-	uchar trigger;
+	byte trigger;
 	void (*callback)(enum INT);
 };
 
