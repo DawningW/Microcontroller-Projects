@@ -1,11 +1,8 @@
 #ifndef __TIMER_H__
 #define __TIMER_H__
 
-#include <STC89C5xRC.H>
-
-#define uchar unsigned char
-#define uint unsigned int
-#define ulong unsigned long
+#include "system.h"
+#include "registers.h"
 
 #define MAX_TIME 1000
 
@@ -24,11 +21,11 @@ enum TIMER { tm0, tm1 };
 struct TimerItem
 {
 	ulong max_time;
-	uint count;
+	word count;
 	void (*callback)(enum TIMER);
 };
 
 extern void init_timer(enum TIMER tm, struct TimerItem item);
-extern void delay(uchar ms);
+extern void delay(byte ms);
 	
 #endif

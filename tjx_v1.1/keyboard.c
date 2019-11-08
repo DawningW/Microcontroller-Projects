@@ -1,16 +1,16 @@
 #include "keyboard.h"
 #include "1602A.h"
 
-uchar scankey();
-uchar getkey(uchar, uchar);
+byte scankey();
+byte getkey(byte, byte);
 
 bit key_lock;
 bit key_shift;
-uchar key;
+byte key;
 
-void (*keyinput)(uint);
+void (*keyinput)(word);
 
-void init_keyboard(void (*callback)(uint key))
+void init_keyboard(void (*callback)(word key))
 {
 	struct IntItem item;
 	item.trigger = 1;
@@ -37,9 +37,9 @@ void keypressed(enum INT i)
  * 线反转法扫描按键
  * 得到的按键码高位是列(x),低位是行(y)
  */
-uchar scankey()
+byte scankey()
 {
-	uchar xpos, ypos;
+	byte xpos, ypos;
 	KEY_PORT = 0xf0;
 	if ((KEY_PORT & 0xf0) != 0xf0)
 	{
@@ -60,9 +60,9 @@ uchar scankey()
 	return 0;
 }
 
-uchar code chars[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
+byte code chars[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
 
-uchar getkey(uchar x, uchar y)
+byte getkey(byte x, byte y)
 {
 	lcd_disp(1, 1, chars[x]);
 	lcd_disp(1, 3, chars[y]);

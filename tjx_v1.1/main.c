@@ -1,19 +1,20 @@
-#include <STC89C5xRC.H>
 #include <intrins.h>
+#include "system.h"
+#include "registers.h"
 #include "keyboard.h"
 #include "1602A.h"
 #include "interrupt.h"
 #include "timer.h"
 
-uchar code hex[][2] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
-uchar code content[] = "HelloWorld! I'm 89C52RC running on TJX V1.1!   ";
-uchar code bell[] = {0x01, 0x1b, 0x1d, 0x19, 0x1d, 0x1b, 0x01, 0x00};
+byte code hex[][2] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"};
+byte code content[] = "HelloWorld! I'm 89C52RC running on TJX V1.1!   ";
+byte code bell[] = {0x01, 0x1b, 0x1d, 0x19, 0x1d, 0x1b, 0x01, 0x00};
 
-uchar pos;
-uchar *next_char;
+byte pos;
+byte *next_char;
 
 void run();
-void key_input(uint);
+void key_input(word);
 void int_actived(enum INT);
 void timer_actived(enum TIMER tm);
 
@@ -22,7 +23,7 @@ void main()
 	struct IntItem iitem;
 	struct TimerItem titem;
 	init_keyboard(&key_input);
-	init_lcd();
+	lcd_init();
 	iitem.trigger = 1;
 	iitem.callback = &int_actived;
 	init_int(int1, iitem);
@@ -30,7 +31,6 @@ void main()
 	titem.callback = &timer_actived;
 	init_timer(tm0, titem);
 	
-	lcd_set_address(0, 0);
 	for (pos = 1, next_char = content; pos < MAX_DISPLAY_CHAR; pos++, next_char++)
 	{
 		if (*next_char == '\0') next_char = content;
@@ -48,9 +48,9 @@ void run()
 
 }
 
-void key_input(uint key)
+void key_input(word key)
 {
-	lcd_set_address(1, 5);
+	lcd_set_pos(1, 5);
 	lcd_print(hex[key - 1]);
 }
 
