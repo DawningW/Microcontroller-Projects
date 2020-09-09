@@ -86,17 +86,17 @@ void lcd_write_cmd(bit side, byte cmd)
 void lcd_write_dat(bit side, byte dat)
 {
 	while (lcd_busy(side));
-	lcd_write(1, dat);
+	lcd_write(1, side, dat);
 }
 
-// TODO 待移除
+// TODO 待重写
 void wrlattice(byte data1, byte data2)
 {
     byte i,j;
     for (j = 0; j < 4; j++)
     {
-        lcd_write_cmd_all(LCD_CMD_LINE);
         lcd_write_cmd_all(LCD_CMD_PAGE + j);
+        lcd_write_cmd_all(LCD_CMD_LINE);
         lcd_write_cmd_all(LCD_CMD_ROW);
         for (i = 0; i < 61; i += 2)
         {
@@ -105,3 +105,81 @@ void wrlattice(byte data1, byte data2)
         }
     }
 }
+
+void disp_char(byte code *eng)
+{ 
+    byte i, j, k;
+    for (k = 0; k < 7; k++)
+    {
+        for(j=0;j<4;j++)
+        {
+            lcd_write_cmd(0, LCD_CMD_PAGE + j);
+            lcd_write_cmd(0, LCD_CMD_LINE);
+            lcd_write_cmd(0, LCD_CMD_ROW + 5 + k * 8);
+            for (i = 0; i < 8; i++)
+            lcd_write_dat(0,eng[k * 32 + j * 8 + i]);
+        }
+    }
+    for (k = 7; k < 14; k++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            lcd_write_cmd(1, LCD_CMD_PAGE + j);
+            lcd_write_cmd(1, LCD_CMD_LINE);
+            lcd_write_cmd(1, LCD_CMD_ROW + k * 8 - 56);
+            for (i = 0; i < 8; i++)
+            lcd_write_dat(1,eng[k * 32 + j * 8 + i]);
+        }
+    }
+}
+
+void disp_chinese(byte code *chn)
+{
+    byte i, j, k;
+    for (k = 0; k < 3; k++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            lcd_write_cmd(0, LCD_CMD_PAGE + j);
+            lcd_write_cmd(0, LCD_CMD_LINE);
+            lcd_write_cmd(0, LCD_CMD_ROW + 12 + k * 16);
+            for (i = 0; i < 16; i++)
+            lcd_write_dat(0, chn[k * 64 + j * 16 + i]);
+        }
+    }
+    for (k = 3; k < 6; k++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            lcd_write_cmd(1, LCD_CMD_PAGE + j);
+            lcd_write_cmd(1, LCD_CMD_LINE);
+            lcd_write_cmd(1, LCD_CMD_ROW + k * 16 - 48);
+            for (i = 0; i < 16; i++)
+            lcd_write_dat(1, chn[k * 64 + j * 16 + i]);
+        }
+    }
+} 
+
+void disp_pattern(byte code *img)
+{
+    byte i, j;
+    for (j = 0; j < 4; j++)
+    {
+        lcd_write_cmd_all(LCD_CMD_PAGE + j);
+        lcd_write_cmd_all(LCD_CMD_LINE);
+        lcd_write_cmd_all(LCD_CMD_ROW);
+        for (i = 0; i < 122; i++)
+        {
+            if (i < 61)
+            {
+                lcd_write_cmd(0, LCD_CMD_ROW + i);
+                lcd_write_dat(0,img[j * 122 + i]);
+            }
+            else
+            {
+                lcd_write_cmd(1, LCD_CMD_ROW + i - 61);
+                lcd_write_dat(1,img[j * 122 + i]);
+            }
+        }
+    }
+} 
