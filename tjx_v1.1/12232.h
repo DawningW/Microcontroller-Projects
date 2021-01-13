@@ -58,14 +58,14 @@ sbit LCD_A0 = P1^4;
 #define LCD_CMD_END 0xEE
 
 // 初始化
-extern void lcd_init()
-extern byte lcd_read(bit type, bit side)
-extern byte lcd_read_state(bit side)
-extern byte lcd_read_dat(bit side)
-extern bit lcd_busy(bit side)
-extern void lcd_write(bit type, bit side, byte content)
-extern void lcd_write_cmd(bit side, byte cmd)
+extern void lcd_init();
+extern byte lcd_read(bit type, bit side);
+extern byte lcd_read_state(bit side);
+extern byte lcd_read_dat(bit side);
+extern bit lcd_busy(bit side);
+extern void lcd_write(bit type, bit side, byte content);
+extern void lcd_write_cmd(bit side, byte cmd);
 #define lcd_write_cmd_all(cmd) lcd_write_cmd(0, cmd);lcd_write_cmd(1, cmd);
-extern void lcd_write_dat(bit side, byte dat)
+extern void lcd_write_dat(bit side, byte dat);
 
 #endif
