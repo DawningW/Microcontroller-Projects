@@ -1,9 +1,7 @@
 #ifndef _LCD_h_
 #define _LCD_h_
 
-#include <intrins.h>
 #include "system.h"
-#include "registers.h"
 
 // 选择引脚
 sfr LCD_DB = 0x80;
