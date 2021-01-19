@@ -177,7 +177,7 @@
           </Flash1>
           <bUseTDR>0</bUseTDR>
           <Flash2></Flash2>
-          <Flash3></Flash3>
+          <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -316,7 +316,7 @@
             <Fuzzy>3</Fuzzy>
             <Optimize>8</Optimize>
             <WarningLevel>2</WarningLevel>
-            <SizeSpeed>1</SizeSpeed>
+            <SizeSpeed>0</SizeSpeed>
             <ObjectExtend>1</ObjectExtend>
             <ACallAJmp>0</ACallAJmp>
             <InterruptVectorAddress>0</InterruptVectorAddress>
@@ -387,9 +387,9 @@
               <FilePath>.\main.c</FilePath>
             </File>
             <File>
-              <FileName>keyboard.c</FileName>
+              <FileName>interrupt.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\keyboard.c</FilePath>
+              <FilePath>.\interrupt.c</FilePath>
             </File>
             <File>
               <FileName>timer.c</FileName>
@@ -397,19 +397,14 @@
               <FilePath>.\timer.c</FilePath>
             </File>
             <File>
-              <FileName>interrupt.c</FileName>
+              <FileName>serial.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\interrupt.c</FilePath>
+              <FilePath>.\serial.c</FilePath>
             </File>
             <File>
-              <FileName>system.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\system.h</FilePath>
-            </File>
-            <File>
-              <FileName>registers.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\registers.h</FilePath>
+              <FileName>keyboard.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\keyboard.c</FilePath>
             </File>
             <File>
               <FileName>1602A.c</FileName>

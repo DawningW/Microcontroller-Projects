@@ -1,5 +1,4 @@
 #include "12232.h"
-#include "timer.h"
 
 void lcd_init()
 {

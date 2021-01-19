@@ -1,9 +1,7 @@
 #ifndef _LCD_h_
 #define _LCD_h_
 
-#include <intrins.h>
 #include "system.h"
-#include "registers.h"
 
 #define MAX_DISPLAY_CHAR 16 // 0x8F - 0x80 + 1
 #define MAX_STORE_CHAR 39 // 0xC0 - 0x80
