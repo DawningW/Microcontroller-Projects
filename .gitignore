@@ -1,5 +1,6 @@
 # exclude all
 .vscode
+*/build
 */Objects
 */Listings
 */*/Objects
