@@ -1,0 +1,3 @@
+[submodule "homework1/components/websocket"]
+	path = homework1/components/websocket
+	url = https://github.com/Molorius/esp32-websocket.git
