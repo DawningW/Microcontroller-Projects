@@ -26,6 +26,13 @@
                     send(message);
                 }
             }
+            document.onkeydown = function(e) {
+                var theEvent = window.event || e;
+                var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+                if (code == 13) {
+                    sendMessage();
+                }
+            }
             var connection = new WebSocket("ws://" + location.hostname + ":81/", []);
             connection.onopen = function() {
                 var date = new Date().toLocaleString();

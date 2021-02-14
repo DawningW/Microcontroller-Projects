@@ -164,7 +164,7 @@ void app_main() {
     // Start SoftAP
     wifi_init_ap();
     // Start STA
-    wifi_init_sta("****", "********");
+    // wifi_init_sta("****", "********");
     ESP_LOGE(TAG, "目前需要你手动填写Wifi SSID和密码");
 
     // Initialize mDNS
@@ -181,10 +181,10 @@ void app_main() {
     fflush(stdout);
 
     // test
-    char received[50];
+    char received[501];
     while (true) {
         if (bluetooth_receive(received)) {
-            received[49] = '\0';
+            received[500] = '\0';
             printf("Received message from Bluetooth: %s\n", received);
             ws_server_send_text_all(received, strlen(received));
         }

@@ -12,6 +12,7 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,7 +43,7 @@ public class MCSFragment extends Fragment implements BluetoothAdapter.LeScanCall
         super.onCreate(savedInstanceState);
         if (getActivity() != null &&
                 getActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            final BluetoothManager bluetoothManager =
+            BluetoothManager bluetoothManager =
                     (BluetoothManager) getActivity().getSystemService(Context.BLUETOOTH_SERVICE);
             bluetoothAdapter = bluetoothManager.getAdapter();
         } else {
@@ -84,13 +85,15 @@ public class MCSFragment extends Fragment implements BluetoothAdapter.LeScanCall
     }
 
     public void link() {
-        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, 1);
-            return;
+        if (connectionStatus == BluetoothProfile.STATE_DISCONNECTED) {
+            if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, 1);
+                return;
+            }
+            bluetoothAdapter.stopLeScan(this);
+            bluetoothAdapter.startLeScan(this);
         }
-        bluetoothAdapter.stopLeScan(this);
-        bluetoothAdapter.startLeScan(this);
     }
 
     public void send(CharSequence text) {
@@ -131,7 +134,11 @@ public class MCSFragment extends Fragment implements BluetoothAdapter.LeScanCall
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             connectionStatus = newState;
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                gatt.discoverServices();
+                if (gatt.discoverServices()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        bluetoothGatt.requestMtu(500);
+                    }
+                }
             }
         }
 
@@ -140,11 +147,11 @@ public class MCSFragment extends Fragment implements BluetoothAdapter.LeScanCall
             BluetoothGattService service = gatt.getService(UUID.fromString(SampleGattAttributes.BLE_SERVICE));
             if (service != null) {
                 getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Utils.toast(getActivity(), "设备发现运行完毕, 成功连接");
-                            }
-                        });
+                                @Override
+                                public void run() {
+                                    Utils.toast(getActivity(), "设备发现运行完毕, 成功连接");
+                                }
+                            });
                 BluetoothGattCharacteristic characteristic = service.getCharacteristic(
                         UUID.fromString(SampleGattAttributes.BLE_TX));
                 if (characteristic != null) {
@@ -156,6 +163,18 @@ public class MCSFragment extends Fragment implements BluetoothAdapter.LeScanCall
                         gatt.setCharacteristicNotification(characteristic, true);
                     }
                 }
+            }
+        }
+
+        @Override
+        public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Utils.toast(getActivity(), "已设置MTU: " + mtu);
+                    }
+                });
             }
         }
 

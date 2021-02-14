@@ -10,7 +10,7 @@
 
 static const char TAG[] = "HTTP";
 
-static char index_page[2048];
+static char index_page[2560];
 static size_t str_len;
 static httpd_handle_t webServer = NULL;
 

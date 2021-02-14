@@ -310,6 +310,7 @@ bool bluetooth_is_connecting() {
 void bluetooth_send(char *data) {
     if (bluetooth_is_connecting()) {
         uint16_t length = strlen(data);
+        if (length > 500) length = 500;
         esp_ble_gatts_send_indicate(profile_tab[PROFILE_APP_ID].gatts_if, profile_tab[PROFILE_APP_ID].conn_id,
                                         profile_tab[PROFILE_APP_ID].char_handle[1], length, (uint8_t*) data, false);
     }
@@ -318,7 +319,7 @@ void bluetooth_send(char *data) {
 bool bluetooth_receive(char *data) {
     if (bluetooth_is_connecting()) {
         if (buffer[0] != '\0') {
-            for (int i = 0; i < 20; ++i) {
+            for (int i = 0; i < 500; ++i) {
                 data[i] = buffer[i];
             }
             memset(buffer, 0, sizeof(buffer) / sizeof(buffer[0]));
