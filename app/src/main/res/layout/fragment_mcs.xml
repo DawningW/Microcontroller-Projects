@@ -10,7 +10,6 @@
     android:paddingVertical="@dimen/activity_vertical_padding"
     tools:context=".ui.MCSFragment">
 
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
