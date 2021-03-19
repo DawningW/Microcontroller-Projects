@@ -106,7 +106,7 @@
 
             <p class="subtitle">模式设置</p>
             <div id="mode" class="pure-button-group">
-                <button id="0" class="pure-button" onclick="send('mode static')">静止</button>
+                <button id="0" class="pure-button" onclick="send('mode constant')">静止</button>
                 <button id="1" class="pure-button" onclick="send('mode blink')">闪烁</button>
                 <button id="2" class="pure-button" onclick="send('mode breathe')">呼吸</button>
                 <button id="3" class="pure-button" onclick="send('mode chase')">跑马灯</button>
@@ -119,13 +119,18 @@
             <p class="subtitle">颜色调节</p>
             <div id="controller">
                 <div id="colorpicker" class="cp-default"></div>
-                Brightness: <input id="brightness" type="range" min="0" max="200" step="1" oninput="updateBrightness()" />
-                <br />
-                R: <input id="r" type="number" min="0" max="255" step="1" oninput="updateRGB()" />
-                G: <input id="g" type="number" min="0" max="255" step="1" oninput="updateRGB()" />
-                B: <input id="b" type="number" min="0" max="255" step="1" oninput="updateRGB()" />
-                <br />
-                <button id="get" class="pure-button" onclick="send('color'), send('brightness')">获取</button>
+                <div>
+                    Brightness: <input id="brightness" type="range" min="0" max="255" step="1" oninput="updateBrightness()" />
+                </div>
+                <div>
+                    Temperature: <input id="temperature" type="range" min="1000" max="20000" step="100" oninput="updateTemperature()" />
+                </div>
+                <div>
+                    R: <input id="r" type="number" min="0" max="255" step="1" oninput="updateRGB()" />
+                    G: <input id="g" type="number" min="0" max="255" step="1" oninput="updateRGB()" />
+                    B: <input id="b" type="number" min="0" max="255" step="1" oninput="updateRGB()" />
+                </div>
+                <button id="get" class="pure-button" onclick="send('color'), send('brightness'), send('temperature')">获取</button>
                 <button id="set" class="pure-button" onclick="sendRGB()">设置</button>
             </div>
 
@@ -180,18 +185,25 @@
                 var brightness = document.getElementById("brightness").value;
                 send("brightness " + brightness);
             }
+            function updateTemperature() {
+                var temperature = document.getElementById("temperature").value;
+                send("temperature " + temperature);
+            }
 
             window.onload = function() {
                 document.getElementById("url").value = "ws://" + location.hostname + ":81/";
                 rws.addEventListener("open", function() {
                     send("color");
                     send("brightness");
+                    send('temperature');
                 });
                 rws.addEventListener("message", function(msg) {
                     if (msg.data[0] == '#')
                         cp.setHex(msg.data);
                     else if (!isNaN(msg.data))
                         document.getElementById("brightness").value = parseInt(msg.data);
+                    else if (msg.data.endsWith("K"))
+                        document.getElementById("temperature").value = parseInt(msg.data.substring(0, msg.data.length - 1));
                 });
                 rws.reconnect();
             }
