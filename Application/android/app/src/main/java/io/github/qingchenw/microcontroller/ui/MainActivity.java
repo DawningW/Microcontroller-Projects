@@ -91,6 +91,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             switchFragment(MCSFragment.class);
         } else if (id == R.id.nav_test) {
             switchFragment(TestFragment.class);
+        } else if (id == R.id.nav_scan) {
+            switchFragment(ScanFragment.class);
         }
         drawer.closeDrawers();
         return true;
