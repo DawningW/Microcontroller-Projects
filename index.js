@@ -49,6 +49,23 @@ window.sendCommand = function() {
     }
 }
 
+// Auth
+window.auth = function() {
+    var code = document.getElementById("code").value;
+    if (code != undefined && code != "") {
+        send("auth " + code);
+    }
+}
+
+// Wifi
+window.connectWifi = function() {
+    var ssid = document.getElementById("wifi-ssid").value;
+    var password = document.getElementById("wifi-pw").value;
+    if (ssid != undefined && ssid != "") {
+        send("connect " + ssid + " " + password);
+    }
+}
+
 // Events
 document.onkeydown = function(e) {
     var theEvent = window.event || e;
