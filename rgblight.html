@@ -118,7 +118,7 @@
             </div>
 
             <p class="subtitle">颜色调节</p>
-            <div id="controller">
+            <div id="controller" style="height: 300px;">
                 <div id="colorpicker" class="cp-default"></div>
                 <div>
                     Brightness: <input id="brightness" type="range" min="0" max="255" step="1" oninput="updateBrightness()" />
@@ -133,6 +133,12 @@
                 </div>
                 <button id="get" class="pure-button" onclick="send('mode'), send('brightness'), send('temperature')">获取</button>
                 <button id="set" class="pure-button" onclick="updateColor()">设置</button>
+            </div>
+
+            <p class="subtitle">音乐播放器</p>
+            <div id="musicplayer">
+                <input id="musicFile" type="file" onchange="onMusicSelected()"/>
+                <button id="stopMusic" class="pure-button" onclick="stopMusic()">停止播放</button>
             </div>
 
         </main>
@@ -196,7 +202,7 @@
             }
 
             window.onload = function() {
-                document.getElementById("url").value = "ws://" + location.hostname + ":81/";
+                document.getElementById("url").value = "ws://" + "172.19.70.9"/*location.hostname*/ + ":81/";
                 rws.addEventListener("open", function() {
                     send("mode");
                     send("brightness");
@@ -218,6 +224,64 @@
                 });
                 rws.reconnect();
             }
+        </script>
+        <script>
+            // 音乐律动
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            const ctx = new AudioContext();
+            const analyser = ctx.createAnalyser();
+            // analyser.fftSize = 512;
+            analyser.fftSize = 32;
+            analyser.smoothingTimeConstant = 0.85;
+            const frequencyArray = new Uint8Array(analyser.frequencyBinCount);
+            var audioSource;
+            var intervalId;
+
+            function playMusic() {
+                intervalId = setInterval(function() {
+                    analyser.getByteFrequencyData(frequencyArray);
+                    var i = 0;
+                    while (i < frequencyArray.length && frequencyArray[i] != 0) ++i;
+                    if (i > 2) --i;
+                    // var result = (i * 255 + frequencyArray[i]) / frequencyArray.length / 255;
+                    var result = frequencyArray[i - 2] * 1.5 / 255;
+                    if (result > 1.0) result = 1.0;
+                    send(String(Number(result).toFixed(2)));
+                }, 50);
+                audioSource.start(0);
+            }
+
+            function stopMusic() {
+                if (audioSource) {
+                    clearInterval(intervalId);
+                    audioSource.stop(0);
+                    audioSource = undefined;
+                }
+            }
+
+            function onMusicSelected() {
+                stopMusic();
+                var file = document.getElementById("musicFile").files[0];
+                var reader = new FileReader();
+                reader.onload = function(evt) {
+                    var buffer = evt.target.result;
+                    ctx.decodeAudioData(buffer,
+                        function(decodedData) {
+                            audioSource = ctx.createBufferSource();
+                            audioSource.buffer = decodedData;
+                            audioSource.loop = true;
+                            audioSource.connect(analyser);
+                            audioSource.connect(ctx.destination);
+                            playMusic();
+                        },
+                        function(e) {
+                            alert("无法读取音频文件: " + e.message);
+                        }
+                    );
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
         </script>
     </body>
 </html>
