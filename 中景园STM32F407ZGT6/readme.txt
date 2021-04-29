@@ -8,4 +8,6 @@ SPL库默认HSI_VALUE为26MHz, 需修改为8MHz
 BOOT0接地时执行用户程序, 接3.3V时执行Bootloader
 FlyMcu的串口控制选项需选择"DTR的低电平复位,RTS高电平进BootLoader"
 
+使用串口时需要将开发板上面的PA10与TX用跳线帽短接, PA9与RX短接
+
 backup.bin为出厂自带测试程序
