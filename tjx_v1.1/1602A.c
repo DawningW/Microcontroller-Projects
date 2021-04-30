@@ -110,9 +110,5 @@ void lcd_disp(bit row, byte col, byte ch)
 
 void lcd_print(byte *str)
 {
-    while ((*str) != '\0')
-    {
-        lcd_write_dat(*str);
-        str++;
-    }
+    while (*str) lcd_write_dat(*str++);
 }

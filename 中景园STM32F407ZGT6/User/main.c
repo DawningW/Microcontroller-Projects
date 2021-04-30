@@ -1,6 +1,7 @@
 #include "system.h"
 #include "delay.h"
 #include "usart.h"
+#include "oled.h"
 
 #define LED0 PFout(9)
 #define LED1 PFout(10)
@@ -74,15 +75,23 @@ void timer_init(void)
 
 int main(void)
 {
+    delay_init();
     led_init();
     key_init();
+    oled_init();
     uart_init(9600);
-    delay_init();
+    // 外部中断初始化
     timer_init();
+    
+    oled_disp_string(16, 2, "Hello World!");
     uart_println("Hello, I'm STM32F407ZGT6!");
+    
     while (1)
     {
         int temp = key_scan();
+        char str[2];
+        sprintf(str, "%d", temp);
+        oled_disp_string(48, 4, str);
         if (temp)
         {
             GPIO_ResetBits(GPIOF, GPIO_Pin_10);
