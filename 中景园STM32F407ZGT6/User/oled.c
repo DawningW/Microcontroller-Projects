@@ -59,9 +59,10 @@ void oled_write(bool type, uint8_t byte)
 {
     if (type)
         OLED_DC_Set();
-    else
+    else 
         OLED_DC_Clr();
     OLED_CS_Clr();
+#if OLED_MODE == 0
     for (uint8_t i = 0; i < 8; ++i)
     {
         OLED_SCLK_Clr();
@@ -71,7 +72,12 @@ void oled_write(bool type, uint8_t byte)
             OLED_SDIN_Clr();
         OLED_SCLK_Set();
         byte <<= 1;
-    }				 		  
+    }
+#else
+    OLED_DATA_WRITE(byte);
+    OLED_WR_Clr();
+    OLED_WR_Set();
+#endif
     OLED_CS_Set();
     OLED_DC_Set();
 }
