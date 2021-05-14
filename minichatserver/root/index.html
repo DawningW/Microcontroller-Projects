@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"> 
+        <title>Mini Chat Server</title>
+    </head>
+    <body>
+        <div id="container" style="margin: 0;">
+            <h1 style="text-align: center;">Mini Chat Server</h1>
+
+            <div id="console" style="margin: 0;">
+                <textarea id="log" style="width: 100%; height: 400px;" readonly="true">Text: </textarea>
+                <input id="message" type="text" />
+                <button id="send" onclick="sendMessage()">发送</button>
+            </div>
+        </div>
+
+        <script>
+            function addText(text) {
+                document.getElementById("log").innerHTML += "\n" + text;
+            }
+            function sendMessage() {
+                var message = document.getElementById("message").value;
+                if (message != undefined && message != "") {
+                    document.getElementById("message").value = "";
+                    send(message);
+                }
+            }
+            document.onkeydown = function(e) {
+                var theEvent = window.event || e;
+                var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+                if (code == 13) {
+                    sendMessage();
+                }
+            }
+            var connection = new WebSocket("ws://" + location.hostname + ":81/", []);
+            connection.onopen = function() {
+                var date = new Date().toLocaleString();
+                console.log("Connected at " + date);
+                addText("已于 " + date + " 成功与 " + location.hostname + ":81" + " 建立连接!");
+            };
+            connection.onerror = function(error) {
+                console.log("WebSocket error: ", error);
+                addText("错误: " + error);
+            };
+            connection.onmessage = function(msg) {
+                console.log("Received message: ", msg.data);
+                addText("接收: " + msg.data);
+            };
+            function send(msg) {
+                console.log("Sent message: " + msg);
+                addText("发送: " + msg);
+                connection.send(msg);
+            }
+        </script>
+    </body>
+</html>
