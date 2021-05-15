@@ -85,8 +85,8 @@ void timer_init(void)
     
     TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure;
     TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
-    TIM_TimeBaseInitStructure.TIM_Period = 10000 - 1;
-    TIM_TimeBaseInitStructure.TIM_Prescaler = 8400 - 1;
+    TIM_TimeBaseInitStructure.TIM_Period = 15 - 1; // 10000 - 1
+    TIM_TimeBaseInitStructure.TIM_Prescaler = 35 - 1; // 8400 - 1
     TIM_TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1; 
     TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStructure);
     
@@ -102,7 +102,8 @@ void timer_init(void)
 }
 
 uint8_t lastkey = 0;
-bool homework = true;
+uint8_t brightness = 7;
+uint16_t tick = 0;
 int main(void)
 {
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
@@ -115,9 +116,13 @@ int main(void)
     
     uart_println("Hello, I'm STM32F407ZGT6!");
     oled_disp_string(16, 2, "Hello World!");
+    oled_disp_string(20, 6, "Author: WC");
     
     while (1)
     {
+        char str_temp[8];
+        sprintf(str_temp, "led: %02d", brightness);
+        oled_disp_string(66, 4, str_temp);
         int temp = key_scan();
         if (lastkey != temp)
         {
@@ -125,7 +130,7 @@ int main(void)
             printf("Update key state: %d\n", lastkey);
             char str[8];
             sprintf(str, "Key: %d", lastkey);
-            oled_disp_string(18, 4, str);
+            oled_disp_string(8, 4, str);
         }
         // if (lastkey) GPIO_ResetBits(GPIOF, GPIO_Pin_10);
         // else GPIO_SetBits(GPIOF, GPIO_Pin_10);
@@ -144,10 +149,15 @@ void TIM3_IRQHandler(void)
     if (TIM_GetITStatus(TIM3, TIM_IT_Update) == SET)
     {
         // LED0 = !LED0;
-        if (homework)
+        if (tick < brightness)
         {
-            LED1 = !LED1;
+            LED1 = 0;
         }
+        else
+        {
+            LED1 = 1;
+        }
+        if (++tick > 15) tick = 0;
     }
     TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 }
@@ -165,10 +175,9 @@ void EXTI0_IRQHandler(void)
 void EXTI3_IRQHandler(void)
 {
     delay_ms(10);
-    if (KEY1 == 0) // 关
+    if (KEY1 == 0) // 大
     {
-        homework = false;
-        LED1 = 1;
+        if (brightness < 15) ++brightness;
     }
     EXTI_ClearITPendingBit(EXTI_Line3);
 }
@@ -176,10 +185,9 @@ void EXTI3_IRQHandler(void)
 void EXTI4_IRQHandler(void)
 {
     delay_ms(10);
-    if (KEY0 == 0) // 开
+    if (KEY0 == 0) // 小
     {
-        homework = true;
-        LED1 = 0;
+        if (brightness > 0) --brightness;
     }
     EXTI_ClearITPendingBit(EXTI_Line4);
 }

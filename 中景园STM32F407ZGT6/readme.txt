@@ -1,6 +1,7 @@
 开发板中景园
 单片机STM32F407ZGT6
-晶振8.000MHZ
+晶振8.000MHz
+系统时钟频率168MHz
 
 SPL库默认HSI_VALUE为26MHz, 需修改为8MHz
 不要忘记修改PLL_M为8
