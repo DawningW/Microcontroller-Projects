@@ -8,30 +8,18 @@
     android:orientation="vertical"
     android:paddingHorizontal="@dimen/activity_horizontal_padding"
     android:paddingVertical="@dimen/activity_vertical_padding"
-    tools:context=".ui.MCSFragment">
+    tools:context=".ui.DebugFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="0"
-            android:gravity="center_vertical"
-            android:text="昵称: "
-            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
-
-        <EditText
-            android:id="@+id/editText_nick"
+        <Spinner
+            android:id="@+id/spinner_devices"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ems="10"
-            android:hint="请输入昵称..."
-            android:inputType="textPersonName"
-            android:text="Android" />
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
 
         <Button
             android:id="@+id/button_connect"
@@ -41,6 +29,8 @@
             android:text="连接" />
     </LinearLayout>
 
+    <!--  参数设置放在这里?  -->
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -48,12 +38,33 @@
         android:layout_marginVertical="12dp">
 
         <TextView
-            android:id="@+id/text_messages"
+            android:id="@+id/text_data"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="聊天消息:"
+            android:text=""
             android:textSize="18sp" />
     </ScrollView>
+
+    <RadioGroup
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:checkedButton="@id/radioButton_string">
+
+        <RadioButton
+            android:id="@+id/radioButton_string"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="字符串" />
+
+        <RadioButton
+            android:id="@+id/radioButton_hex"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="十六进制" />
+    </RadioGroup>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -61,12 +72,12 @@
         android:orientation="horizontal">
 
         <EditText
-            android:id="@+id/editText_message"
+            android:id="@+id/editText_data"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:ems="10"
-            android:hint="请输入消息..."
+            android:hint="请输入数据..."
             android:inputType="text" />
 
         <Button

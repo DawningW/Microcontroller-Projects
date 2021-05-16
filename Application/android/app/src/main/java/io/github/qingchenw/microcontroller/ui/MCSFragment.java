@@ -27,7 +27,7 @@ import androidx.fragment.app.Fragment;
 import java.util.UUID;
 
 import io.github.qingchenw.microcontroller.R;
-import io.github.qingchenw.microcontroller.SampleGattAttributes;
+import io.github.qingchenw.microcontroller.device.SampleGattAttributes;
 import io.github.qingchenw.microcontroller.Utils;
 
 public class MCSFragment extends Fragment implements BluetoothAdapter.LeScanCallback {
@@ -55,8 +55,8 @@ public class MCSFragment extends Fragment implements BluetoothAdapter.LeScanCall
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_mcs, container, false);
         textViewMessages = root.findViewById(R.id.text_messages);
-        editTextMessage = root.findViewById(R.id.edittext_message);
-        root.findViewById(R.id.button_link).setOnClickListener(this::onClicked);
+        editTextMessage = root.findViewById(R.id.editText_message);
+        root.findViewById(R.id.button_connect).setOnClickListener(this::onClicked);
         root.findViewById(R.id.button_send).setOnClickListener(this::onClicked);
         return root;
     }
@@ -74,7 +74,7 @@ public class MCSFragment extends Fragment implements BluetoothAdapter.LeScanCall
 
     public void onClicked(View view) {
         int id = view.getId();
-        if (id == R.id.button_link) {
+        if (id == R.id.button_connect) {
             link();
         } else if (id == R.id.button_send) {
             if (editTextMessage.getText().length() > 0) {

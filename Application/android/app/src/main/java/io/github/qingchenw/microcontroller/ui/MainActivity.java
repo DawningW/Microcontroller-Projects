@@ -16,10 +16,8 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.navigation.NavigationView;
 import com.permissionx.guolindev.PermissionX;
-import com.permissionx.guolindev.callback.ExplainReasonCallback;
 import com.permissionx.guolindev.callback.ForwardToSettingsCallback;
 import com.permissionx.guolindev.callback.RequestCallback;
-import com.permissionx.guolindev.request.ExplainScope;
 import com.permissionx.guolindev.request.ForwardScope;
 
 import java.util.List;
@@ -32,6 +30,7 @@ import io.github.qingchenw.microcontroller.Utils;
 *
 * @author wc
 **/
+// TODO 标题栏菜单加入扫一扫和NFC
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     DrawerLayout drawer;
     ActionBarDrawerToggle drawerToggle;
@@ -90,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (id == R.id.nav_mcs) {
             switchFragment(MCSFragment.class);
         } else if (id == R.id.nav_test) {
-            switchFragment(TestFragment.class);
+            switchFragment(DebugFragment.class);
         } else if (id == R.id.nav_scan) {
             switchFragment(ScanFragment.class);
         }
@@ -109,12 +108,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         PermissionX.init(this)
                 .permissions(Manifest.permission.BLUETOOTH, Manifest.permission.ACCESS_FINE_LOCATION)
                 .explainReasonBeforeRequest()
-                .onExplainRequestReason(new ExplainReasonCallback() {
-                    @Override
-                    public void onExplainReason(ExplainScope scope, List<String> deniedList) {
-                        scope.showRequestReasonDialog(deniedList, getString(R.string.permission_reason), getString(android.R.string.ok));
-                    }
-                })
+                .onExplainRequestReason((scope, deniedList) -> scope.showRequestReasonDialog(deniedList, getString(R.string.permission_reason), getString(android.R.string.ok)))
                 .onForwardToSettings(new ForwardToSettingsCallback() {
                     @Override
                     public void onForwardToSettings(ForwardScope scope, List<String> deniedList) {

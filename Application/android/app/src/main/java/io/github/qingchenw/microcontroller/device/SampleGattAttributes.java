@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.qingchenw.microcontroller;
+package io.github.qingchenw.microcontroller.device;
 
 import java.util.HashMap;
 import java.util.UUID;
