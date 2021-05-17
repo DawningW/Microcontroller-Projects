@@ -1,8 +1,13 @@
 package io.github.qingchenw.microcontroller.ui;
 
 import android.Manifest;
+import android.app.Service;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -20,10 +25,13 @@ import com.permissionx.guolindev.callback.ForwardToSettingsCallback;
 import com.permissionx.guolindev.callback.RequestCallback;
 import com.permissionx.guolindev.request.ForwardScope;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.github.qingchenw.microcontroller.R;
 import io.github.qingchenw.microcontroller.Utils;
+import io.github.qingchenw.microcontroller.device.IDevice;
+import io.github.qingchenw.microcontroller.service.DeviceDiscoveryService;
 
 /*
 * Main Activity
@@ -31,9 +39,29 @@ import io.github.qingchenw.microcontroller.Utils;
 * @author wc
 **/
 // TODO 标题栏菜单加入扫一扫和NFC
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
-    DrawerLayout drawer;
-    ActionBarDrawerToggle drawerToggle;
+public class MainActivity extends AppCompatActivity implements
+        NavigationView.OnNavigationItemSelectedListener, DeviceDiscoveryService.ScanCallback {
+    private DrawerLayout drawer;
+    private ActionBarDrawerToggle drawerToggle;
+
+    private DeviceDiscoveryService service;
+    private final ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder binder) {
+            service = ((DeviceDiscoveryService.ServiceBinder) binder).getService();
+            service.addScanCallback(MainActivity.this);
+            // TODO 先在这开始搜索, 以后再说
+            service.startScan(0);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            service.removeScanCallback(MainActivity.this);
+            service = null;
+        }
+    };
+
+    protected List<IDevice> devices = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +76,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawer.addDrawerListener(drawerToggle);
         NavigationView navigationView = findViewById(R.id.navigation_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        Intent intent = new Intent(this, DeviceDiscoveryService.class);
+        bindService(intent, connection, Service.BIND_AUTO_CREATE);
 
         if (savedInstanceState == null) {
             navigationView.setCheckedItem(R.id.nav_home);
@@ -95,6 +126,41 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         drawer.closeDrawers();
         return true;
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (service != null) {
+            unbindService(connection);
+        }
+        super.onDestroy();
+    }
+
+    @Override
+    public void onScanStart() {
+
+    }
+
+    @Override
+    public void onDeviceScanned(IDevice device) {
+        devices.add(device);
+    }
+
+    @Override
+    public void onScanStop() {
+
+    }
+
+    public int getDeviceCount() {
+        return devices.size();
+    }
+
+    public int getConnectedDeviceCount() {
+        int count = 0;
+        for (IDevice device : devices) {
+            if (device.isConnected()) count++;
+        }
+        return count;
     }
 
     private void switchFragment(Class<? extends Fragment> clazz) {

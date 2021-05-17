@@ -1,16 +1,16 @@
 package io.github.qingchenw.microcontroller.device;
 
-public class WebSocketDevice implements IDevice {
-    String name;
+import io.github.qingchenw.microcontroller.R;
 
-    @Override
-    public String getName() {
-        return name;
+public class DeviceBluetooth extends DeviceBase {
+
+    public DeviceBluetooth() {
+
     }
 
     @Override
-    public void setName(String name) {
-        this.name = name;
+    public int getIcon() {
+        return R.drawable.ic_debug_24;
     }
 
     @Override
