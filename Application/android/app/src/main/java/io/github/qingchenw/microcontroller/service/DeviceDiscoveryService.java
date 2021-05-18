@@ -130,9 +130,9 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
                 Log.i(TAG,"Connect to serial successfully.");
                 DeviceSerial serialDevice = new DeviceSerial(serialPort);
                 try {
-                    serialPort.syncWrite("info\n\r".getBytes(), 100);
+                    serialPort.syncWrite("info\r\n".getBytes(), 200);
                     byte[] buffer = new byte[256];
-                    serialPort.syncRead(buffer, 500);
+                    serialPort.syncRead(buffer, 1000);
                     String str = new String(buffer).trim();
                     JSONObject json = new JSONObject(str);
                     serialDevice.setName(json.getString("name"));
