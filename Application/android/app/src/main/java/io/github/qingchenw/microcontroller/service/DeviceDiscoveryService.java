@@ -97,6 +97,7 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
             SSDPClient.discoverServices(SsdpRequest.discoverAll(), this);
         } else {
             timer.cancel();
+            timer = new Timer();
         }
         if (timeout > 0) {
             timer.schedule(new TimerTask() {
@@ -111,8 +112,10 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
     public void stopScan() {
         if (isScanning) {
             timer.cancel();
+            timer = new Timer();
             serialBuilder.unregisterListeners(this);
             SSDPClient.stopDiscovery();
+            SSDPClient = SsdpClient.create();
             for (ScanCallback callback : callbacks) {
                 callback.onScanStop();
             }
@@ -189,7 +192,8 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
 
     @Override
     public void onFailed(Exception e) {
-        e.printStackTrace();
+        Log.e(TAG, "SSDP error: " + e.getLocalizedMessage());
+        stopScan();
     }
 
     public class ServiceBinder extends Binder {

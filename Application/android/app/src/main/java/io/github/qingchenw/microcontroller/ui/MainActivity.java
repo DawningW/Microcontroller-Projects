@@ -1,13 +1,8 @@
 package io.github.qingchenw.microcontroller.ui;
 
 import android.Manifest;
-import android.app.Service;
-import android.content.ComponentName;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -18,15 +13,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory;
 
 import com.google.android.material.navigation.NavigationView;
 import com.permissionx.guolindev.PermissionX;
 
 import io.github.qingchenw.microcontroller.R;
 import io.github.qingchenw.microcontroller.Utils;
-import io.github.qingchenw.microcontroller.device.DeviceManager;
-import io.github.qingchenw.microcontroller.device.IDevice;
-import io.github.qingchenw.microcontroller.service.DeviceDiscoveryService;
+import io.github.qingchenw.microcontroller.viewmodel.DeviceViewModel;
 
 /**
  * Main Activity
@@ -35,35 +30,21 @@ import io.github.qingchenw.microcontroller.service.DeviceDiscoveryService;
  */
 // TODO 标题栏菜单加入扫一扫和NFC
 public class MainActivity extends AppCompatActivity implements
-        NavigationView.OnNavigationItemSelectedListener,
-        DeviceDiscoveryService.ScanCallback, DeviceManager.OnChangedListener {
+        NavigationView.OnNavigationItemSelectedListener {
+    private DeviceViewModel deviceViewModel;
+
     private DrawerLayout drawer;
     private ActionBarDrawerToggle drawerToggle;
-
-    private DeviceDiscoveryService service;
-    private final ServiceConnection connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder binder) {
-            service = ((DeviceDiscoveryService.ServiceBinder) binder).getService();
-            service.addScanCallback(MainActivity.this);
-            service.startScan(30);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            service.removeScanCallback(MainActivity.this);
-            service = null;
-        }
-    };
-    private DeviceManager deviceManager;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AndroidViewModelFactory factory = AndroidViewModelFactory.getInstance(getApplication());
+        deviceViewModel = new ViewModelProvider(this, factory).get(DeviceViewModel.class);
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         drawer = findViewById(R.id.drawer_layout);
         drawerToggle = new ActionBarDrawerToggle(this,
                 drawer, toolbar, R.string.drawer_open, R.string.drawer_close);
@@ -94,10 +75,6 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
-        deviceManager = DeviceManager.getInstance();
-        deviceManager.addOnChangedListener(this);
-        Intent intent = new Intent(this, DeviceDiscoveryService.class);
-        bindService(intent, connection, Service.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -117,6 +94,8 @@ public class MainActivity extends AppCompatActivity implements
         int id = item.getItemId();
         if (id == R.id.nav_home) {
             switchFragment(HomeFragment.class);
+        } else if (id == R.id.nav_rgblight) {
+            switchFragment(RGBLightFragment.class);
         } else if (id == R.id.nav_mcs) {
             switchFragment(MCSFragment.class);
         } else if (id == R.id.nav_debug) {
@@ -130,38 +109,12 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     protected void onStop() {
-        if (service != null) {
-            unbindService(connection);
-        }
-        if (deviceManager != null) {
-            deviceManager.removeOnChangedListener(this);
-        }
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-    }
-
-    @Override
-    public void onScanStart() {
-
-    }
-
-    @Override
-    public void onDeviceScanned(IDevice device) {
-        deviceManager.addDevice(device);
-    }
-
-    @Override
-    public void onScanStop() {
-
-    }
-
-    @Override
-    public void onDeviceChanged() {
-
     }
 
     private void switchFragment(Class<? extends Fragment> clazz) {

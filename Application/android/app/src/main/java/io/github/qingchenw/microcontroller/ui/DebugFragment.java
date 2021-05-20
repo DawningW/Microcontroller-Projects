@@ -2,6 +2,7 @@ package io.github.qingchenw.microcontroller.ui;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,21 +18,25 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import io.github.qingchenw.microcontroller.R;
 import io.github.qingchenw.microcontroller.Utils;
-import io.github.qingchenw.microcontroller.device.DeviceManager;
 import io.github.qingchenw.microcontroller.device.IDevice;
+import io.github.qingchenw.microcontroller.viewmodel.DeviceViewModel;
 
 /**
  * Debug devices
  *
  * @author wc
  */
-public class DebugFragment extends Fragment implements DeviceManager.OnChangedListener, IDevice.Callback {
+public class DebugFragment extends Fragment implements IDevice.Callback {
+    private DeviceViewModel deviceViewModel;
+
     private Spinner spinnerDevices;
     private Button buttonConnect;
     private ScrollView scrollViewData;
@@ -41,7 +46,6 @@ public class DebugFragment extends Fragment implements DeviceManager.OnChangedLi
     private EditText editTextData;
 
     private Handler handler;
-    private DeviceManager deviceManager;
     private List<String> deviceNamesList;
     private ArrayAdapter<String> devicesAdapter;
     private IDevice device;
@@ -50,24 +54,25 @@ public class DebugFragment extends Fragment implements DeviceManager.OnChangedLi
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         handler = new Handler();
-        deviceManager = DeviceManager.getInstance();
-        deviceManager.addOnChangedListener(this);
         deviceNamesList = new ArrayList<>();
     }
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        AndroidViewModelFactory factory = AndroidViewModelFactory.getInstance(requireActivity().getApplication());
+        deviceViewModel = new ViewModelProvider(requireActivity(), factory).get(DeviceViewModel.class);
+
         View root = inflater.inflate(R.layout.fragment_debug, container, false);
         spinnerDevices = root.findViewById(R.id.spinner_devices);
         spinnerDevices.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (device == null || !device.isConnected())
-                    device = deviceManager.getDevices().get(position);
+                    device = deviceViewModel.getDevices().getValue().get(position);
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                if (device == null || !device.isConnected())
+                if (device != null && !device.isConnected())
                     device = null;
             }
         });
@@ -75,7 +80,13 @@ public class DebugFragment extends Fragment implements DeviceManager.OnChangedLi
                 android.R.layout.simple_spinner_item, deviceNamesList);
         devicesAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerDevices.setAdapter(devicesAdapter);
-        updateSpinner();
+        deviceViewModel.getDevices().observe(getViewLifecycleOwner(), devices -> {
+            deviceNamesList.clear();
+            for (IDevice d :devices) {
+                deviceNamesList.add(d.getName());
+            }
+            devicesAdapter.notifyDataSetChanged();
+        });
         buttonConnect = root.findViewById(R.id.button_connect);
         buttonConnect.setOnClickListener(view -> {
             if (device != null) {
@@ -115,16 +126,10 @@ public class DebugFragment extends Fragment implements DeviceManager.OnChangedLi
         if (device != null && device.isConnected())
             device.disconnect();
         device = null;
-        deviceManager.removeOnChangedListener(this);
     }
 
     @Override
-    public void onDeviceChanged() {
-        updateSpinner();
-    }
-
-    @Override
-    public void onConnected() {
+    public void onConnected(IDevice device) {
         handler.post(() -> {
             spinnerDevices.setEnabled(false);
             buttonConnect.setText("断开");
@@ -133,7 +138,7 @@ public class DebugFragment extends Fragment implements DeviceManager.OnChangedLi
     }
 
     @Override
-    public void onDisconnected() {
+    public void onDisconnected(IDevice device) {
         handler.post(() -> {
             spinnerDevices.setEnabled(true);
             buttonConnect.setText("连接");
@@ -142,14 +147,15 @@ public class DebugFragment extends Fragment implements DeviceManager.OnChangedLi
     }
 
     @Override
-    public void onError(String error) {
+    public void onError(IDevice device, String error) {
         handler.post(() -> {
+            Log.e("Debug", error);
             addText("错误: " + error);
         });
     }
 
     @Override
-    public void onDataReceived(byte[] data) {
+    public void onDataReceived(IDevice device, byte[] data) {
         handler.post(() -> {
             if (radioButtonString.isChecked()) {
                 addText("接收: " + new String(data));
@@ -186,15 +192,6 @@ public class DebugFragment extends Fragment implements DeviceManager.OnChangedLi
             addText("错误: 未选择发送数据种类");
         }
         addText("发送: " + data);
-    }
-
-    private void updateSpinner() {
-        deviceNamesList.clear();
-        List<IDevice> devices = deviceManager.getDevices();
-        for (IDevice d :devices) {
-            deviceNamesList.add(d.getName());
-        }
-        devicesAdapter.notifyDataSetChanged();
     }
 
     private void addText(String text) {

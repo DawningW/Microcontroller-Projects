@@ -23,9 +23,9 @@ public interface IDevice {
     void send(byte[] data);
 
     interface Callback {
-        void onConnected();
-        void onDisconnected();
-        void onError(String error);
-        void onDataReceived(byte[] data);
+        void onConnected(IDevice device);
+        void onDisconnected(IDevice device);
+        void onError(IDevice device, String error);
+        void onDataReceived(IDevice device, byte[] data);
     }
 }

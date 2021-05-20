@@ -75,28 +75,28 @@ public class DeviceWebSocket extends DeviceBase {
         public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
             isConnected = true;
             if (callback != null)
-                callback.onConnected();
+                callback.onConnected(DeviceWebSocket.this);
         }
 
         @Override
         public void onClosed(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
             isConnected = false;
             if (callback != null)
-                callback.onDisconnected();
+                callback.onDisconnected(DeviceWebSocket.this);
         }
 
         @Override
         public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
             if (callback != null)
-                callback.onDataReceived(text.getBytes());
+                callback.onDataReceived(DeviceWebSocket.this, text.getBytes());
         }
 
         @Override
         public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, @Nullable Response response) {
             isConnected = false;
             if (callback != null) {
-                callback.onError(t.getLocalizedMessage());
-                callback.onDisconnected();
+                callback.onError(DeviceWebSocket.this, t.getLocalizedMessage());
+                callback.onDisconnected(DeviceWebSocket.this);
             }
             notifyRemove();
         }

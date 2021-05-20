@@ -59,12 +59,7 @@ public final class DeviceManager {
     }
 
     public boolean hasDevice(String id) {
-        for (IDevice device : devices) {
-            if (Utils.stringsAreEqualled(device.getID(), id)) {
-                return true;
-            }
-        }
-        return false;
+        return getDevice(id) != null;
     }
 
     public IDevice getDevice(String id) {
@@ -93,7 +88,7 @@ public final class DeviceManager {
         if (!listeners.isEmpty()) {
             handler.post(() -> {
                 for (OnChangedListener listener : listeners)
-                    listener.onDeviceChanged();
+                    listener.onDeviceChanged(device, false);
             });
         }
     }
@@ -103,7 +98,7 @@ public final class DeviceManager {
             if (!listeners.isEmpty()) {
                 handler.post(() -> {
                     for (OnChangedListener listener : listeners)
-                        listener.onDeviceChanged();
+                        listener.onDeviceChanged(device, true);
                 });
             }
             return true;
@@ -116,6 +111,6 @@ public final class DeviceManager {
     }
 
     public interface OnChangedListener {
-        void onDeviceChanged();
+        void onDeviceChanged(IDevice device, boolean removed);
     }
 }

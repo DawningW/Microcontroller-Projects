@@ -17,9 +17,6 @@
 package io.github.qingchenw.microcontroller.device;
 
 import java.util.HashMap;
-import java.util.UUID;
-
-import android.bluetooth.BluetoothGattCharacteristic;
 
 /**
  * This class includes a small subset of standard GATT attributes for demonstration purposes.

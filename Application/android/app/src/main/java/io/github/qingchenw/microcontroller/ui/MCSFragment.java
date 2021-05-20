@@ -30,6 +30,12 @@ import io.github.qingchenw.microcontroller.R;
 import io.github.qingchenw.microcontroller.device.SampleGattAttributes;
 import io.github.qingchenw.microcontroller.Utils;
 
+/**
+ * Mini chat server
+ *
+ * @author wc
+ */
+// TODO 尚未重构
 public class MCSFragment extends Fragment implements BluetoothAdapter.LeScanCallback {
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothGatt bluetoothGatt;

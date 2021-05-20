@@ -44,7 +44,7 @@ public class DeviceSerial extends DeviceBase implements UsbSerialInterface.UsbRe
         if (this.serialDevice.open()) {
             this.serialDevice.read(this);
             if (this.callback != null)
-                this.callback.onConnected();
+                this.callback.onConnected(this);
         }
     }
 
@@ -52,7 +52,7 @@ public class DeviceSerial extends DeviceBase implements UsbSerialInterface.UsbRe
     public void disconnect() {
         this.serialDevice.close();
         if (this.callback != null)
-            this.callback.onDisconnected();
+            this.callback.onDisconnected(this);
     }
 
     @Override
@@ -71,7 +71,7 @@ public class DeviceSerial extends DeviceBase implements UsbSerialInterface.UsbRe
                 if (bytes.length > 0) {
                     this.buffer.get(bytes);
                     if (this.callback != null)
-                        this.callback.onDataReceived(bytes);
+                        this.callback.onDataReceived(this, bytes);
                 }
                 this.buffer.clear();
             } else {
