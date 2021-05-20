@@ -55,7 +55,6 @@ public class DeviceWebSocket extends DeviceBase {
     @Override
     public void disconnect() {
         webSocket.close(1000, null);
-        webSocket = null;
     }
 
     @Override
@@ -95,9 +94,11 @@ public class DeviceWebSocket extends DeviceBase {
         @Override
         public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, @Nullable Response response) {
             isConnected = false;
-            if (callback != null)
+            if (callback != null) {
                 callback.onError(t.getLocalizedMessage());
-            disconnect();
+                callback.onDisconnected();
+            }
+            notifyRemove();
         }
     }
 }

@@ -49,7 +49,6 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
 
     @Override
     public void onCreate() {
-        super.onCreate();
         callbacks = new ArrayList<>();
         timer = new Timer();
         serialBuilder = SerialPortBuilder.createSerialPortBuilder(this);
@@ -69,15 +68,14 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
     @Override
     public void onDestroy() {
         stopScan();
-        super.onDestroy();
     }
 
     public void addScanCallback(ScanCallback callback) {
         callbacks.add(callback);
     }
 
-    public boolean removeScanCallback(ScanCallback callback) {
-        return callbacks.remove(callback);
+    public void removeScanCallback(ScanCallback callback) {
+        callbacks.remove(callback);
     }
 
     public boolean isScanning() {
@@ -97,16 +95,16 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
                     UsbSerialInterface.PARITY_NONE,
                     UsbSerialInterface.FLOW_CONTROL_OFF);
             SSDPClient.discoverServices(SsdpRequest.discoverAll(), this);
-            if (timeout > 0) {
-                timer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        stopScan();
-                    }
-                }, timeout * 1000);
-            }
         } else {
-            Log.w(TAG, "Scanning devices now. Please stop first.");
+            timer.cancel();
+        }
+        if (timeout > 0) {
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    stopScan();
+                }
+            }, timeout * 1000);
         }
     }
 
@@ -176,7 +174,8 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
             device.setVersion(descriptor.getModelNumber());
             device.setProducer(descriptor.getManufacturer());
         } catch (IOException e) {
-            e.printStackTrace();
+            device.setName("未知设备");
+            Log.i(TAG,"Unknown ssdp device.");
         }
         for (ScanCallback callback : callbacks) {
             callback.onDeviceScanned(device);

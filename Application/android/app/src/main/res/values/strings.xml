@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">WC\'s Microcontroller</string>
 
+    <string name="service_device_label">设备发现服务</string>
+    <string name="service_device_description">用于发现您的物联网设备, 停止运行后将不能发现设备</string>
+
     <string name="permission_reason">我们需要以下权限才能正常工作，我们承诺不会收集您的隐私，而且本应用开源，欢迎您的监督</string>
     <string name="permission_failed">您拒绝授予了一些权限，请在应用程序设置中手动授予权限</string>
     <string name="permission_ok">所有权限都已允许，感谢您的理解与支持</string>

@@ -17,7 +17,7 @@
             android:icon="@drawable/ic_debug_24"
             android:title="@string/menu_mcs" />
         <item
-            android:id="@+id/nav_test"
+            android:id="@+id/nav_debug"
             android:icon="@drawable/ic_debug_24"
             android:title="@string/menu_debug" />
         <item

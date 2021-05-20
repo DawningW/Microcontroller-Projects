@@ -26,4 +26,8 @@ public final class Utils {
     public static void toast(Context context, @StringRes int resId) {
         toast(context, context.getResources().getString(resId));
     }
+
+    public static boolean stringsAreEqualled(String s1, String s2) {
+        return s1 != null && s1.equals(s2);
+    }
 }

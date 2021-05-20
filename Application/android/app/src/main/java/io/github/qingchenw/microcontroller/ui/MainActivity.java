@@ -21,26 +21,22 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.navigation.NavigationView;
 import com.permissionx.guolindev.PermissionX;
-import com.permissionx.guolindev.callback.ForwardToSettingsCallback;
-import com.permissionx.guolindev.callback.RequestCallback;
-import com.permissionx.guolindev.request.ForwardScope;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import io.github.qingchenw.microcontroller.R;
 import io.github.qingchenw.microcontroller.Utils;
+import io.github.qingchenw.microcontroller.device.DeviceManager;
 import io.github.qingchenw.microcontroller.device.IDevice;
 import io.github.qingchenw.microcontroller.service.DeviceDiscoveryService;
 
-/*
-* Main Activity
-*
-* @author wc
-**/
+/**
+ * Main Activity
+ *
+ * @author wc
+ */
 // TODO 标题栏菜单加入扫一扫和NFC
 public class MainActivity extends AppCompatActivity implements
-        NavigationView.OnNavigationItemSelectedListener, DeviceDiscoveryService.ScanCallback {
+        NavigationView.OnNavigationItemSelectedListener,
+        DeviceDiscoveryService.ScanCallback, DeviceManager.OnChangedListener {
     private DrawerLayout drawer;
     private ActionBarDrawerToggle drawerToggle;
 
@@ -50,8 +46,7 @@ public class MainActivity extends AppCompatActivity implements
         public void onServiceConnected(ComponentName name, IBinder binder) {
             service = ((DeviceDiscoveryService.ServiceBinder) binder).getService();
             service.addScanCallback(MainActivity.this);
-            // TODO 先在这开始搜索, 以后再说
-            service.startScan(0);
+            service.startScan(30);
         }
 
         @Override
@@ -60,11 +55,10 @@ public class MainActivity extends AppCompatActivity implements
             service = null;
         }
     };
-
-    protected List<IDevice> devices = new ArrayList<>();
+    private DeviceManager deviceManager;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -76,9 +70,6 @@ public class MainActivity extends AppCompatActivity implements
         drawer.addDrawerListener(drawerToggle);
         NavigationView navigationView = findViewById(R.id.navigation_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-        Intent intent = new Intent(this, DeviceDiscoveryService.class);
-        bindService(intent, connection, Service.BIND_AUTO_CREATE);
 
         if (savedInstanceState == null) {
             navigationView.setCheckedItem(R.id.nav_home);
@@ -101,6 +92,15 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        deviceManager = DeviceManager.getInstance();
+        deviceManager.addOnChangedListener(this);
+        Intent intent = new Intent(this, DeviceDiscoveryService.class);
+        bindService(intent, connection, Service.BIND_AUTO_CREATE);
+    }
+
+    @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         drawerToggle.onConfigurationChanged(newConfig);
@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity implements
             switchFragment(HomeFragment.class);
         } else if (id == R.id.nav_mcs) {
             switchFragment(MCSFragment.class);
-        } else if (id == R.id.nav_test) {
+        } else if (id == R.id.nav_debug) {
             switchFragment(DebugFragment.class);
         } else if (id == R.id.nav_scan) {
             switchFragment(ScanFragment.class);
@@ -129,10 +129,18 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected void onDestroy() {
+    protected void onStop() {
         if (service != null) {
             unbindService(connection);
         }
+        if (deviceManager != null) {
+            deviceManager.removeOnChangedListener(this);
+        }
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
         super.onDestroy();
     }
 
@@ -143,7 +151,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onDeviceScanned(IDevice device) {
-        devices.add(device);
+        deviceManager.addDevice(device);
     }
 
     @Override
@@ -151,16 +159,9 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
-    public int getDeviceCount() {
-        return devices.size();
-    }
+    @Override
+    public void onDeviceChanged() {
 
-    public int getConnectedDeviceCount() {
-        int count = 0;
-        for (IDevice device : devices) {
-            if (device.isConnected()) count++;
-        }
-        return count;
     }
 
     private void switchFragment(Class<? extends Fragment> clazz) {
@@ -175,18 +176,10 @@ public class MainActivity extends AppCompatActivity implements
                 .permissions(Manifest.permission.BLUETOOTH, Manifest.permission.ACCESS_FINE_LOCATION)
                 .explainReasonBeforeRequest()
                 .onExplainRequestReason((scope, deniedList) -> scope.showRequestReasonDialog(deniedList, getString(R.string.permission_reason), getString(android.R.string.ok)))
-                .onForwardToSettings(new ForwardToSettingsCallback() {
-                    @Override
-                    public void onForwardToSettings(ForwardScope scope, List<String> deniedList) {
-                        scope.showForwardToSettingsDialog(deniedList, getString(R.string.permission_failed), getString(android.R.string.ok));
-                    }
-                })
-                .request(new RequestCallback() {
-                    @Override
-                    public void onResult(boolean allGranted, List<String> grantedList, List<String> deniedList) {
-                        if (allGranted) {
-                            Utils.toast(MainActivity.this, getString(R.string.permission_ok));
-                        }
+                .onForwardToSettings((scope, deniedList) -> scope.showForwardToSettingsDialog(deniedList, getString(R.string.permission_failed), getString(android.R.string.ok)))
+                .request((allGranted, grantedList, deniedList) -> {
+                    if (allGranted) {
+                        Utils.toast(MainActivity.this, getString(R.string.permission_ok));
                     }
                 });
     }

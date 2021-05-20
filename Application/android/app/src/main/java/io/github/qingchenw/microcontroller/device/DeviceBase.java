@@ -56,4 +56,8 @@ public abstract class DeviceBase implements IDevice {
     public void setProducer(String producer) {
         this.producer = producer;
     }
+
+    protected void notifyRemove() {
+        DeviceManager.getInstance().removeDevice(this);
+    }
 }

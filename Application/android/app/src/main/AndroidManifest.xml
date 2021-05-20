@@ -27,10 +27,15 @@
         android:supportsRtl="true"
         android:allowBackup="true"
         android:usesCleartextTraffic="true">
+
         <service
             android:enabled="true"
-            android:exported="true"
-            android:name=".service.DeviceDiscoveryService" />
+            android:exported="false"
+            android:name=".service.DeviceDiscoveryService"
+            android:label="@string/service_device_label"
+            android:icon="@drawable/ic_debug_24"
+            android:description="@string/service_device_description" />
+
         <activity
             android:name=".ui.MainActivity"
             android:label="@string/app_name"
@@ -40,6 +45,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>
