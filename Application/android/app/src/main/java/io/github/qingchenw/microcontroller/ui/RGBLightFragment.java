@@ -10,27 +10,23 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import io.github.qingchenw.microcontroller.R;
+import io.github.qingchenw.microcontroller.databinding.FragmentRgblightBinding;
+import io.github.qingchenw.microcontroller.databinding.FragmentScanBinding;
+import io.github.qingchenw.microcontroller.viewmodel.DeviceViewModel;
 
 /**
- * RGBLight
+ * RGBLight Fragment
  *
  * @author wc
  */
 public class RGBLightFragment extends Fragment {
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
+    private DeviceViewModel deviceViewModel;
+    private FragmentRgblightBinding viewBinding;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_rgblight, container, false);
-        return root;
-    }
+        viewBinding = FragmentRgblightBinding.inflate(inflater, container, false);
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+        return viewBinding.getRoot();
     }
 }

@@ -21,8 +21,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import io.github.qingchenw.microcontroller.Utils;
-import io.github.qingchenw.microcontroller.device.DeviceSerial;
-import io.github.qingchenw.microcontroller.device.DeviceWebSocket;
+import io.github.qingchenw.microcontroller.device.impl.SerialDevice;
+import io.github.qingchenw.microcontroller.device.impl.WebSocketDevice;
 import io.github.qingchenw.microcontroller.device.IDevice;
 import io.github.qingchenw.microcontroller.device.SSDPDescriptor;
 import io.resourcepool.ssdp.client.SsdpClient;
@@ -129,7 +129,7 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
         for (UsbSerialDevice serialPort : serialPorts) {
             if (serialPort.isOpen()) {
                 Log.i(TAG,"Connect to serial successfully.");
-                DeviceSerial serialDevice = new DeviceSerial(serialPort);
+                SerialDevice serialDevice = new SerialDevice(serialPort);
                 try {
                     serialPort.syncWrite("info\r\n".getBytes(), 200);
                     byte[] buffer = new byte[256];
@@ -161,7 +161,7 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
     @Override
     public void onServiceDiscovered(SsdpService ssdpService) {
         Log.i(TAG,"Discovery device through SSDP.");
-        DeviceWebSocket device = new DeviceWebSocket(ssdpService.getRemoteIp().getHostAddress());
+        WebSocketDevice device = new WebSocketDevice(ssdpService.getRemoteIp().getHostAddress());
         try {
             Request request = new Request.Builder()
                     .url(ssdpService.getLocation())

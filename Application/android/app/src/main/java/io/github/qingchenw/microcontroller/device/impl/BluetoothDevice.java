@@ -1,10 +1,10 @@
-package io.github.qingchenw.microcontroller.device;
+package io.github.qingchenw.microcontroller.device.impl;
 
 import io.github.qingchenw.microcontroller.R;
 
-public class DeviceBluetooth extends DeviceBase {
+public class BluetoothDevice extends BaseDevice {
 
-    public DeviceBluetooth() {
+    public BluetoothDevice() {
 
     }
 

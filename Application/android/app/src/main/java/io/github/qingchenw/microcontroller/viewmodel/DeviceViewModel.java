@@ -10,17 +10,19 @@ import android.os.IBinder;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-import io.github.qingchenw.microcontroller.device.DeviceManager;
+import io.github.qingchenw.microcontroller.Utils;
 import io.github.qingchenw.microcontroller.device.IDevice;
 import io.github.qingchenw.microcontroller.service.DeviceDiscoveryService;
 
-public class DeviceViewModel extends AndroidViewModel
-        implements DeviceDiscoveryService.ScanCallback, DeviceManager.OnChangedListener {
+public class DeviceViewModel extends AndroidViewModel implements DeviceDiscoveryService.ScanCallback {
+    private static final int SCAN_PERIOD = 10;
+
     @SuppressLint("StaticFieldLeak")
     private DeviceDiscoveryService service;
     private final ServiceConnection connection = new ServiceConnection() {
@@ -37,18 +39,14 @@ public class DeviceViewModel extends AndroidViewModel
             service = null;
         }
     };
-    private DeviceManager deviceManager;
-    private MutableLiveData<ScanState> scanState;
-    private MutableLiveData<List<IDevice>> devices;
+    private final List<IDevice> deviceList = new ArrayList<>();
+    private final MutableLiveData<ScanState> scanState = new MutableLiveData<>(ScanState.STOPPED);
+    private final MutableLiveData<List<IDevice>> devices = new MutableLiveData<>(deviceList);
 
     public DeviceViewModel(@NonNull Application application) {
         super(application);
-        deviceManager = DeviceManager.getInstance();
-        deviceManager.addOnChangedListener(this);
         Intent intent = new Intent(application, DeviceDiscoveryService.class);
         application.bindService(intent, connection, Service.BIND_AUTO_CREATE);
-        scanState = new MutableLiveData<>(ScanState.STOPPED);
-        devices = new MutableLiveData<>(deviceManager.getDevices());
     }
 
     @Override
@@ -56,14 +54,11 @@ public class DeviceViewModel extends AndroidViewModel
         if (service != null) {
             getApplication().unbindService(connection);
         }
-        if (deviceManager != null) {
-            deviceManager.removeOnChangedListener(this);
-        }
         super.onCleared();
     }
 
     public void startScan() {
-        service.startScan(10);
+        service.startScan(SCAN_PERIOD);
     }
 
     public void stopScan() {
@@ -71,11 +66,7 @@ public class DeviceViewModel extends AndroidViewModel
     }
 
     public int getDeviceCount() {
-        return deviceManager.getDeviceCount();
-    }
-
-    public int getConnectedDeviceCount() {
-        return deviceManager.getConnectedDeviceCount();
+        return deviceList.size();
     }
 
     public MutableLiveData<ScanState> getScanState() {
@@ -93,7 +84,20 @@ public class DeviceViewModel extends AndroidViewModel
 
     @Override
     public void onDeviceScanned(IDevice device) {
-        deviceManager.addDevice(device);
+        Iterator<IDevice> iterator = deviceList.iterator();
+        while (iterator.hasNext()) {
+            IDevice oldDevice = iterator.next();
+            if (oldDevice.getAddress().equals(device.getAddress())) {
+                if (Utils.stringsAreEqualled(oldDevice.getID(), device.getID())) {
+                    return;
+                }
+                oldDevice.disconnect();
+                iterator.remove();
+                break;
+            }
+        }
+        deviceList.add(device);
+        devices.postValue(deviceList);
     }
 
     @Override
@@ -101,9 +105,10 @@ public class DeviceViewModel extends AndroidViewModel
         scanState.postValue(ScanState.STOPPED);
     }
 
-    @Override
-    public void onDeviceChanged(IDevice device, boolean removed) {
-        devices.setValue(deviceManager.getDevices());
+    public void removeDevice(IDevice device) {
+        if (deviceList.remove(device)) {
+            devices.postValue(deviceList);
+        }
     }
 
     public enum ScanState {

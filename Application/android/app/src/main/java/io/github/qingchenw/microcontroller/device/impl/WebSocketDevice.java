@@ -1,4 +1,4 @@
-package io.github.qingchenw.microcontroller.device;
+package io.github.qingchenw.microcontroller.device.impl;
 
 import androidx.annotation.NonNull;
 
@@ -11,7 +11,7 @@ import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 
-public class DeviceWebSocket extends DeviceBase {
+public class WebSocketDevice extends BaseDevice {
     private static final String PORT = "81";
 
     private String address;
@@ -20,7 +20,7 @@ public class DeviceWebSocket extends DeviceBase {
     private WebSocket webSocket;
     private Callback callback;
 
-    public DeviceWebSocket(String address) {
+    public WebSocketDevice(String address) {
         this.address = address;
     }
 
@@ -75,28 +75,28 @@ public class DeviceWebSocket extends DeviceBase {
         public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
             isConnected = true;
             if (callback != null)
-                callback.onConnected(DeviceWebSocket.this);
+                callback.onConnected(WebSocketDevice.this);
         }
 
         @Override
         public void onClosed(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
             isConnected = false;
             if (callback != null)
-                callback.onDisconnected(DeviceWebSocket.this);
+                callback.onDisconnected(WebSocketDevice.this);
         }
 
         @Override
         public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
             if (callback != null)
-                callback.onDataReceived(DeviceWebSocket.this, text.getBytes());
+                callback.onDataReceived(WebSocketDevice.this, text.getBytes());
         }
 
         @Override
         public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, @Nullable Response response) {
             isConnected = false;
             if (callback != null) {
-                callback.onError(DeviceWebSocket.this, t.getLocalizedMessage());
-                callback.onDisconnected(DeviceWebSocket.this);
+                callback.onError(WebSocketDevice.this, t.getLocalizedMessage());
+                callback.onDisconnected(WebSocketDevice.this);
             }
             notifyRemove();
         }

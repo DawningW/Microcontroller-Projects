@@ -1,4 +1,4 @@
-package io.github.qingchenw.microcontroller.device;
+package io.github.qingchenw.microcontroller.device.impl;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
@@ -7,14 +7,14 @@ import java.nio.ByteBuffer;
 
 import io.github.qingchenw.microcontroller.R;
 
-public class DeviceSerial extends DeviceBase implements UsbSerialInterface.UsbReadCallback {
+public class SerialDevice extends BaseDevice implements UsbSerialInterface.UsbReadCallback {
     static private final byte[] CRLF = { '\r', '\n' };
 
     private UsbSerialDevice serialDevice;
     private ByteBuffer buffer;
     private Callback callback;
 
-    public DeviceSerial(UsbSerialDevice serialDevice) {
+    public SerialDevice(UsbSerialDevice serialDevice) {
         this.serialDevice = serialDevice;
         this.buffer = ByteBuffer.allocate(512);
     }

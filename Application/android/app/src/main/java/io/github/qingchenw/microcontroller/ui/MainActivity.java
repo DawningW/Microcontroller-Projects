@@ -10,8 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory;
@@ -21,6 +19,7 @@ import com.permissionx.guolindev.PermissionX;
 
 import io.github.qingchenw.microcontroller.R;
 import io.github.qingchenw.microcontroller.Utils;
+import io.github.qingchenw.microcontroller.databinding.ActivityMainBinding;
 import io.github.qingchenw.microcontroller.viewmodel.DeviceViewModel;
 
 /**
@@ -31,31 +30,32 @@ import io.github.qingchenw.microcontroller.viewmodel.DeviceViewModel;
 // TODO 标题栏菜单加入扫一扫和NFC
 public class MainActivity extends AppCompatActivity implements
         NavigationView.OnNavigationItemSelectedListener {
+    private ActivityMainBinding viewBinding;
+    private ActionBarDrawerToggle drawerToggle;
     private DeviceViewModel deviceViewModel;
 
-    private DrawerLayout drawer;
-    private ActionBarDrawerToggle drawerToggle;
-
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        AndroidViewModelFactory factory = AndroidViewModelFactory.getInstance(getApplication());
-        deviceViewModel = new ViewModelProvider(this, factory).get(DeviceViewModel.class);
-
-        setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        drawer = findViewById(R.id.drawer_layout);
+        viewBinding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(viewBinding.getRoot());
+        setSupportActionBar(viewBinding.toolbar);
         drawerToggle = new ActionBarDrawerToggle(this,
-                drawer, toolbar, R.string.drawer_open, R.string.drawer_close);
-        drawer.addDrawerListener(drawerToggle);
+                viewBinding.drawerLayout, viewBinding.toolbar,
+                R.string.drawer_open, R.string.drawer_close);
+        viewBinding.drawerLayout.addDrawerListener(drawerToggle);
         NavigationView navigationView = findViewById(R.id.navigation_view);
         navigationView.setNavigationItemSelectedListener(this);
-
         if (savedInstanceState == null) {
             navigationView.setCheckedItem(R.id.nav_home);
             switchFragment(HomeFragment.class);
         }
+
+        AndroidViewModelFactory factory = AndroidViewModelFactory.getInstance(getApplication());
+        deviceViewModel = new ViewModelProvider(this, factory).get(DeviceViewModel.class);
+        deviceViewModel.getDevices().observe(this, devices -> {
+
+        });
     }
 
     @Override
@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements
         } else if (id == R.id.nav_scan) {
             switchFragment(ScanFragment.class);
         }
-        drawer.closeDrawers();
+        viewBinding.drawerLayout.closeDrawers();
         return true;
     }
 

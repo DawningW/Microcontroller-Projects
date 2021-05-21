@@ -31,7 +31,7 @@ import io.github.qingchenw.microcontroller.device.SampleGattAttributes;
 import io.github.qingchenw.microcontroller.Utils;
 
 /**
- * Mini chat server
+ * Mini chat server Fragment
  *
  * @author wc
  */

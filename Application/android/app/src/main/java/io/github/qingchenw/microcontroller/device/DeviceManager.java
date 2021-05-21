@@ -5,27 +5,26 @@ import android.os.Looper;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
-
-import io.github.qingchenw.microcontroller.Utils;
+import java.util.Map;
 
 /**
- * Manage devices that have been discovered.
+ * Manage devices that have been connected.
  *
  * @author wc
  */
 // TODO 发心跳包
 public final class DeviceManager {
     private static DeviceManager instance;
-    private Handler handler;
-    private List<OnChangedListener> listeners;
-    private List<IDevice> devices;
+    private final Handler handler;
+    private final List<OnChangedListener> listeners;
+    private final Map<String, IDevice> devices;
 
     public DeviceManager() {
         handler = new Handler(Looper.getMainLooper());
         listeners = new ArrayList<>();
-        devices = Collections.synchronizedList(new ArrayList<>());
+        devices = Collections.synchronizedMap(new HashMap<>());
         instance = this;
     }
 
@@ -38,66 +37,37 @@ public final class DeviceManager {
         listeners.remove(listener);
     }
 
-    public List<IDevice> getDevices() {
-        return devices;
-    }
-
     public int getDeviceCount() {
         return devices.size();
     }
 
-    public int getConnectedDeviceCount() {
-        int count = 0;
-        for (IDevice device : devices) {
-            if (device.isConnected()) count++;
-        }
-        return count;
-    }
-
     public boolean hasDevice(IDevice device) {
-        return devices.contains(device);
+        return devices.containsValue(device);
     }
 
-    public boolean hasDevice(String id) {
-        return getDevice(id) != null;
+    public boolean hasDevice(String address) {
+        return devices.containsKey(address);
     }
 
-    public IDevice getDevice(String id) {
-        for (IDevice device : devices) {
-            if (Utils.stringsAreEqualled(device.getID(), id)) {
-                return device;
-            }
-        }
-        return null;
+    public IDevice getDevice(String address) {
+        return devices.get(address);
     }
 
     public void addDevice(IDevice device) {
-        Iterator<IDevice> iterator = devices.iterator();
-        while (iterator.hasNext()) {
-            IDevice oldDevice = iterator.next();
-            if (oldDevice.getAddress().equals(device.getAddress())) {
-                if (Utils.stringsAreEqualled(oldDevice.getID(), device.getID())) {
-                    return;
-                }
-                oldDevice.disconnect();
-                iterator.remove();
-                break;
-            }
-        }
-        devices.add(device);
+        devices.put(device.getAddress(), device);
         if (!listeners.isEmpty()) {
             handler.post(() -> {
-                for (OnChangedListener listener : listeners)
+                for (DeviceManager.OnChangedListener listener : listeners)
                     listener.onDeviceChanged(device, false);
             });
         }
     }
 
     public boolean removeDevice(IDevice device) {
-        if (devices.remove(device)) {
+        if (devices.remove(device.getAddress()) != null) {
             if (!listeners.isEmpty()) {
                 handler.post(() -> {
-                    for (OnChangedListener listener : listeners)
+                    for (DeviceManager.OnChangedListener listener : listeners)
                         listener.onDeviceChanged(device, true);
                 });
             }

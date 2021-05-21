@@ -1,6 +1,9 @@
-package io.github.qingchenw.microcontroller.device;
+package io.github.qingchenw.microcontroller.device.impl;
 
-public abstract class DeviceBase implements IDevice {
+import io.github.qingchenw.microcontroller.device.DeviceManager;
+import io.github.qingchenw.microcontroller.device.IDevice;
+
+public abstract class BaseDevice implements IDevice {
     String name;
     String id;
     String model;

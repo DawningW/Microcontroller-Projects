@@ -2,6 +2,9 @@ package io.github.qingchenw.microcontroller.device;
 
 import androidx.annotation.DrawableRes;
 
+/**
+ * An interface that describe a device.
+ */
 public interface IDevice {
     String getName();
     void setName(String name);
