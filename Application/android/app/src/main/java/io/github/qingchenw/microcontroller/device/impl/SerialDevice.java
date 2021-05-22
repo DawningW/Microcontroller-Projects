@@ -21,7 +21,7 @@ public class SerialDevice extends BaseDevice implements UsbSerialInterface.UsbRe
 
     @Override
     public int getIcon() {
-        return R.drawable.ic_debug_24;
+        return R.drawable.ic_usb_24;
     }
 
     @Override

@@ -26,7 +26,7 @@ public class WebSocketDevice extends BaseDevice {
 
     @Override
     public int getIcon() {
-        return R.drawable.ic_debug_24;
+        return R.drawable.ic_wifi_24;
     }
 
     @Override

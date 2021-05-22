@@ -9,9 +9,11 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import io.github.qingchenw.microcontroller.R;
 import io.github.qingchenw.microcontroller.databinding.FragmentScanBinding;
+import io.github.qingchenw.microcontroller.ui.adapter.DeviceListAdapter;
 import io.github.qingchenw.microcontroller.viewmodel.DeviceViewModel;
 
 /**
@@ -19,10 +21,10 @@ import io.github.qingchenw.microcontroller.viewmodel.DeviceViewModel;
  *
  * @author wc
  */
-// TODO 搜索不到设备的时候显示点提示
 public class ScanFragment extends Fragment {
     private DeviceViewModel deviceViewModel;
     private FragmentScanBinding viewBinding;
+    private DeviceListAdapter adapter;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -31,6 +33,8 @@ public class ScanFragment extends Fragment {
         viewBinding.swipeLayout.setOnRefreshListener(() -> {
             deviceViewModel.startScan();
         });
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        viewBinding.listDevices.setLayoutManager(layoutManager);
         return viewBinding.getRoot();
     }
 
@@ -39,8 +43,18 @@ public class ScanFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         AndroidViewModelFactory factory = AndroidViewModelFactory.getInstance(requireActivity().getApplication());
         deviceViewModel = new ViewModelProvider(requireActivity(), factory).get(DeviceViewModel.class);
+        adapter = new DeviceListAdapter(deviceViewModel.getDevices().getValue());
+        viewBinding.listDevices.setAdapter(adapter);
         deviceViewModel.getScanState().observe(getViewLifecycleOwner(), state -> {
             viewBinding.swipeLayout.setRefreshing(state == DeviceViewModel.ScanState.SCANNING);
+        });
+        deviceViewModel.getDevices().observe(getViewLifecycleOwner(), devices -> {
+            if (!devices.isEmpty()) {
+                viewBinding.textNoDevices.setVisibility(View.GONE);
+            } else {
+                viewBinding.textNoDevices.setVisibility(View.VISIBLE);
+            }
+            adapter.notifyDataSetChanged();
         });
     }
 }

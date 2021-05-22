@@ -10,7 +10,7 @@ public class BluetoothDevice extends BaseDevice {
 
     @Override
     public int getIcon() {
-        return R.drawable.ic_debug_24;
+        return R.drawable.ic_bluetooth_24;
     }
 
     @Override

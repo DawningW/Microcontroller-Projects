@@ -2,9 +2,9 @@ package io.github.qingchenw.microcontroller.ui;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,42 +25,40 @@ import io.github.qingchenw.microcontroller.databinding.FragmentDebugBinding;
 import io.github.qingchenw.microcontroller.device.IDevice;
 import io.github.qingchenw.microcontroller.viewmodel.DeviceViewModel;
 
+import static android.widget.AdapterView.INVALID_POSITION;
+
 /**
  * Debug Fragment
  *
  * @author wc
  */
 public class DebugFragment extends Fragment implements IDevice.Callback {
+    private final Handler handler = new Handler(Looper.getMainLooper());
     private FragmentDebugBinding viewBinding;
     private DeviceViewModel deviceViewModel;
-    private final Handler handler = new Handler();
-    private final List<String> deviceNameList = new ArrayList<>();
     private ArrayAdapter<String> devicesAdapter;
+    private final List<String> deviceNamesList = new ArrayList<>();
     private IDevice device;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         viewBinding = FragmentDebugBinding.inflate(inflater, container, false);
         viewBinding.spinnerDevices.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (device == null || !device.isConnected())
-                    device = deviceViewModel.getDevices().getValue().get(position);
+                device = deviceViewModel.getDevices().getValue().get(position);
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                if (device != null && !device.isConnected())
-                    device = null;
+                device = null;
             }
         });
         viewBinding.buttonConnect.setOnClickListener(view -> {
             if (device != null) {
+                viewBinding.buttonConnect.setEnabled(false);
                 if (!device.isConnected()) {
+                    viewBinding.spinnerDevices.setEnabled(false);
                     device.setCallback(this);
                     device.connect();
                 } else {
@@ -72,10 +70,10 @@ public class DebugFragment extends Fragment implements IDevice.Callback {
         });
         viewBinding.textData.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) { }
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
 
             @Override
             public void afterTextChanged(Editable s) {
@@ -102,31 +100,42 @@ public class DebugFragment extends Fragment implements IDevice.Callback {
         super.onViewCreated(view, savedInstanceState);
         AndroidViewModelFactory factory = AndroidViewModelFactory.getInstance(requireActivity().getApplication());
         deviceViewModel = new ViewModelProvider(requireActivity(), factory).get(DeviceViewModel.class);
-        devicesAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, deviceNameList);
+        devicesAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, deviceNamesList);
         devicesAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         viewBinding.spinnerDevices.setAdapter(devicesAdapter);
         deviceViewModel.getDevices().observe(getViewLifecycleOwner(), devices -> {
-            deviceNameList.clear();
+            deviceNamesList.clear();
             for (IDevice device : devices) {
-                deviceNameList.add(device.getName());
+                deviceNamesList.add(device.getName());
             }
             devicesAdapter.notifyDataSetChanged();
+            if (device != null) {
+                if (devices.contains(device)) {
+                    viewBinding.spinnerDevices.setSelection(devices.indexOf(device));
+                    return;
+                } else {
+                    device.disconnect();
+                    device = null;
+                }
+            }
+            viewBinding.spinnerDevices.setSelection(INVALID_POSITION);
         });
     }
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
-        if (device != null && device.isConnected())
+        if (device != null && device.isConnected()) {
+            device.setCallback(null);
             device.disconnect();
-        device = null;
+        }
+        super.onDestroy();
     }
 
     @Override
     public void onConnected(IDevice device) {
         handler.post(() -> {
-            viewBinding.spinnerDevices.setEnabled(false);
             viewBinding.buttonConnect.setText("断开");
+            viewBinding.buttonConnect.setEnabled(true);
             addText("已连接至 " + device.getName() + "(" + device.getAddress() + ")");
         });
     }
@@ -136,6 +145,7 @@ public class DebugFragment extends Fragment implements IDevice.Callback {
         handler.post(() -> {
             viewBinding.spinnerDevices.setEnabled(true);
             viewBinding.buttonConnect.setText("连接");
+            viewBinding.buttonConnect.setEnabled(true);
             addText("已与 " + device.getName() + " 断开连接");
         });
     }
@@ -143,7 +153,7 @@ public class DebugFragment extends Fragment implements IDevice.Callback {
     @Override
     public void onError(IDevice device, String error) {
         handler.post(() -> {
-            Log.e("Debug", error);
+            deviceViewModel.removeDevice(device);
             addText("错误: " + error);
         });
     }
@@ -166,7 +176,7 @@ public class DebugFragment extends Fragment implements IDevice.Callback {
         });
     }
 
-    private void sendData(String data) {
+    public void sendData(String data) {
         if (viewBinding.radioButtonString.isChecked()) {
             device.send(data.getBytes());
         } else if (viewBinding.radioButtonHex.isChecked()) {
@@ -180,7 +190,7 @@ public class DebugFragment extends Fragment implements IDevice.Callback {
                 }
                 device.send(hex);
             } catch (NumberFormatException e) {
-                addText("错误: 输入的16进制数有误");
+                addText("错误: 输入的16进制数无效");
             }
         } else {
             addText("错误: 未选择发送数据种类");
@@ -189,7 +199,8 @@ public class DebugFragment extends Fragment implements IDevice.Callback {
     }
 
     private void addText(String text) {
-        if (!text.isEmpty()) viewBinding.textData.append("\n");
+        if (viewBinding.textData.getText().length() > 0)
+            viewBinding.textData.append("\n");
         viewBinding.textData.append(text);
     }
 }
