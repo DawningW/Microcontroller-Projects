@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.github.qingchenw.microcontroller.R;
 import io.github.qingchenw.microcontroller.Utils;
 import io.github.qingchenw.microcontroller.databinding.FragmentDebugBinding;
 import io.github.qingchenw.microcontroller.device.IDevice;
@@ -106,7 +107,8 @@ public class DebugFragment extends Fragment implements IDevice.Callback {
         deviceViewModel.getDevices().observe(getViewLifecycleOwner(), devices -> {
             deviceNamesList.clear();
             for (IDevice device : devices) {
-                deviceNamesList.add(device.getName());
+                String name = device.getName();
+                deviceNamesList.add(name != null ? name : getString(R.string.device_name_unknown));
             }
             devicesAdapter.notifyDataSetChanged();
             if (device != null) {
@@ -136,7 +138,8 @@ public class DebugFragment extends Fragment implements IDevice.Callback {
         handler.post(() -> {
             viewBinding.buttonConnect.setText("断开");
             viewBinding.buttonConnect.setEnabled(true);
-            addText("已连接至 " + device.getName() + "(" + device.getAddress() + ")");
+            String name = device.getName() != null ? device.getName() : "未知设备";
+            addText("已连接至 " + name + "(" + device.getAddress() + ")");
         });
     }
 
@@ -146,7 +149,8 @@ public class DebugFragment extends Fragment implements IDevice.Callback {
             viewBinding.spinnerDevices.setEnabled(true);
             viewBinding.buttonConnect.setText("连接");
             viewBinding.buttonConnect.setEnabled(true);
-            addText("已与 " + device.getName() + " 断开连接");
+            String name = device.getName() != null ? device.getName() : "未知设备";
+            addText("已与 " + name + " 断开连接");
         });
     }
 

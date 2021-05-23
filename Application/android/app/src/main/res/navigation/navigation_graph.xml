@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navigation_graph"
+    app:startDestination="@id/nav_home">
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="io.github.qingchenw.microcontroller.ui.HomeFragment"
+        android:label="@string/menu_home"
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_home_to_scan"
+            app:destination="@id/nav_scan" />
+        <action
+            android:id="@+id/action_home_to_rgblight"
+            app:destination="@id/nav_rgblight" />
+        <action
+            android:id="@+id/action_home_to_mcs"
+            app:destination="@id/nav_mcs" />
+        <action
+            android:id="@+id/action_home_to_debug"
+            app:destination="@id/nav_debug" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_scan"
+        android:name="io.github.qingchenw.microcontroller.ui.ScanFragment"
+        android:label="@string/menu_scan"
+        tools:layout="@layout/fragment_scan" />
+    <fragment
+        android:id="@+id/nav_rgblight"
+        android:name="io.github.qingchenw.microcontroller.ui.RGBLightFragment"
+        android:label="@string/menu_rgblight"
+        tools:layout="@layout/fragment_rgblight" />
+    <fragment
+        android:id="@+id/nav_mcs"
+        android:name="io.github.qingchenw.microcontroller.ui.MCSFragment"
+        android:label="@string/menu_mcs"
+        tools:layout="@layout/fragment_mcs" />
+    <fragment
+        android:id="@+id/nav_debug"
+        android:name="io.github.qingchenw.microcontroller.ui.DebugFragment"
+        android:label="@string/menu_debug"
+        tools:layout="@layout/fragment_debug" />
+</navigation>

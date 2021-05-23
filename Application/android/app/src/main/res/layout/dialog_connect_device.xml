@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingHorizontal="@dimen/activity_horizontal_padding"
+    android:paddingVertical="@dimen/activity_vertical_padding"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/text_device_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/device_name"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColor="#000000" />
+
+    <TextView
+        android:id="@+id/text_device_address"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/device_address"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColor="#000000" />
+
+    <TextView
+        android:id="@+id/text_device_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/device_id"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColor="#000000" />
+
+    <TextView
+        android:id="@+id/text_device_model"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/device_model"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColor="#000000" />
+
+    <TextView
+        android:id="@+id/text_device_version"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/device_version"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColor="#000000" />
+
+    <TextView
+        android:id="@+id/text_device_producer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/device_producer"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColor="#000000" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="请输入授权码"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColor="#000000" />
+
+    <EditText
+        android:id="@+id/editText_auth_code"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="请输入授权码..."
+        android:inputType="text"
+        android:singleLine="true" />
+</LinearLayout>

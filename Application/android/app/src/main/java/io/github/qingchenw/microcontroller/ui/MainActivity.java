@@ -1,26 +1,30 @@
 package io.github.qingchenw.microcontroller.ui;
 
 import android.Manifest;
-import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
+import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.NavigationUI;
 
-import com.google.android.material.navigation.NavigationView;
 import com.permissionx.guolindev.PermissionX;
+
+import java.lang.reflect.Method;
 
 import io.github.qingchenw.microcontroller.R;
 import io.github.qingchenw.microcontroller.Utils;
 import io.github.qingchenw.microcontroller.databinding.ActivityMainBinding;
 import io.github.qingchenw.microcontroller.viewmodel.DeviceViewModel;
+import okhttp3.internal.Util;
 
 /**
  * Main Activity
@@ -28,28 +32,24 @@ import io.github.qingchenw.microcontroller.viewmodel.DeviceViewModel;
  * @author wc
  */
 // TODO 标题栏菜单加入扫一扫和NFC
-public class MainActivity extends AppCompatActivity implements
-        NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding viewBinding;
     private ActionBarDrawerToggle drawerToggle;
+    private NavController navController;
     private DeviceViewModel deviceViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         viewBinding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(viewBinding.getRoot());
         setSupportActionBar(viewBinding.toolbar);
-        drawerToggle = new ActionBarDrawerToggle(this,
-                viewBinding.drawerLayout, viewBinding.toolbar,
-                R.string.drawer_open, R.string.drawer_close);
-        viewBinding.drawerLayout.addDrawerListener(drawerToggle);
-        NavigationView navigationView = findViewById(R.id.navigation_view);
-        navigationView.setNavigationItemSelectedListener(this);
-        if (savedInstanceState == null) {
-            navigationView.setCheckedItem(R.id.nav_home);
-            switchFragment(HomeFragment.class);
-        }
+        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.fragment_container);
+        navController = navHostFragment.getNavController();
+        NavigationUI.setupWithNavController(viewBinding.toolbar, navController, viewBinding.drawerLayout);
+        NavigationUI.setupWithNavController(viewBinding.navigationView, navController);
 
         AndroidViewModelFactory factory = AndroidViewModelFactory.getInstance(getApplication());
         deviceViewModel = new ViewModelProvider(this, factory).get(DeviceViewModel.class);
@@ -59,69 +59,37 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        drawerToggle.syncState();
-
-        // TODO 先在这申请权限, 以后再说
-        findViewById(R.id.toolbar).postDelayed(this::requestPermissions, 1000);
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        return false;
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        if (menu instanceof MenuBuilder) {
+            try {
+                Class<?> clazz = Class.forName("androidx.appcompat.view.menu.MenuBuilder");
+                Method m = clazz.getDeclaredMethod("setOptionalIconsVisible", boolean.class);
+                m.setAccessible(true);
+                m.invoke(menu, true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return true;
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-    }
-
-    @Override
-    public void onConfigurationChanged(@NonNull Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        drawerToggle.onConfigurationChanged(newConfig);
+        new Handler().postDelayed(this::requestPermissions, 1000);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (drawerToggle.onOptionsItemSelected(item)) return true;
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.nav_home) {
-            switchFragment(HomeFragment.class);
-        } else if (id == R.id.nav_rgblight) {
-            switchFragment(RGBLightFragment.class);
-        } else if (id == R.id.nav_mcs) {
-            switchFragment(MCSFragment.class);
-        } else if (id == R.id.nav_debug) {
-            switchFragment(DebugFragment.class);
-        } else if (id == R.id.nav_scan) {
-            switchFragment(ScanFragment.class);
+        if (item.getItemId() == R.id.action_qrcode) {
+            Utils.toast(this, "扫什么二维码, 我咕咕咕了");
+        } else if (item.getItemId() == R.id.action_nfc) {
+            Utils.toast(this, "碰什么nfc, 我咕咕咕了");
+        } else {
+            return super.onOptionsItemSelected(item);
         }
-        viewBinding.drawerLayout.closeDrawers();
         return true;
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
-    private void switchFragment(Class<? extends Fragment> clazz) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, clazz, null)
-                .commit();
     }
 
     private void requestPermissions() {

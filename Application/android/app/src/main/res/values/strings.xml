@@ -26,6 +26,21 @@
     <string name="home_devices_count">已连接设备数：%d/%d</string>
     <string name="home_devices_find">发现新设备数：%d</string>
 
+    <string name="dialog_connect_device">连接设备</string>
+
+    <string name="device_name">设备名称: %s</string>
+    <string name="device_address">地址: %s</string>
+    <string name="device_id">序列号: %s</string>
+    <string name="device_model">型号: %s</string>
+    <string name="device_version">固件版本: %s</string>
+    <string name="device_producer">制造商: %s</string>
+
+    <string name="device_name_unknown">未知设备</string>
+    <string name="device_id_unknown">未知序列号</string>
+    <string name="device_model_unknown">未知型号</string>
+    <string name="device_version_unknown">未知版本</string>
+    <string name="device_producer_unknown">未知厂商</string>
+
     <string name="unauth">请登录</string>
 
 </resources>

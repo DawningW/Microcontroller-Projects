@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/action_qrcode"
+        android:icon="@drawable/ic_qr_code_24"
+        android:title="扫一扫"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_nfc"
+        android:icon="@drawable/ic_nfc_24"
+        android:title="碰一碰"
+        app:showAsAction="never" />
+</menu>

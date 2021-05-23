@@ -16,9 +16,14 @@ import io.github.qingchenw.microcontroller.device.IDevice;
 
 public class DeviceListAdapter extends RecyclerView.Adapter<DeviceListAdapter.DeviceViewHolder> {
     private final List<IDevice> deviceList;
+    private OnItemClickListener onClickListener;
 
     public DeviceListAdapter(List<IDevice> deviceList) {
         this.deviceList = deviceList;
+    }
+
+    public void setOnClickListener(OnItemClickListener listener) {
+        this.onClickListener = listener;
     }
 
     @NonNull
@@ -31,9 +36,14 @@ public class DeviceListAdapter extends RecyclerView.Adapter<DeviceListAdapter.De
 
     @Override
     public void onBindViewHolder(@NonNull DeviceViewHolder holder, int position) {
-        holder.getImageViewIcon().setImageResource(deviceList.get(position).getIcon());
-        holder.getTextViewName().setText(deviceList.get(position).getName());
-        holder.getTextViewAddress().setText(deviceList.get(position).getAddress());
+        IDevice device = deviceList.get(position);
+        holder.imageIcon.setImageResource(device.getIcon());
+        if (device.getName() != null) {
+            holder.textName.setText(device.getName());
+        } else {
+            holder.textName.setText(R.string.device_name_unknown);
+        }
+        holder.textAddress.setText(device.getAddress());
     }
 
     @Override
@@ -41,28 +51,26 @@ public class DeviceListAdapter extends RecyclerView.Adapter<DeviceListAdapter.De
         return deviceList.size();
     }
 
-    public static class DeviceViewHolder extends RecyclerView.ViewHolder {
-        private final ImageView imageIcon;
-        private final TextView textName;
-        private final TextView textAddress;
+    public class DeviceViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        public final ImageView imageIcon;
+        public final TextView textName;
+        public final TextView textAddress;
 
         public DeviceViewHolder(View view) {
             super(view);
+            view.setOnClickListener(this);
             imageIcon = view.findViewById(R.id.image_device_icon);
             textName = view.findViewById(R.id.text_device_name);
             textAddress = view.findViewById(R.id.text_device_address);
         }
 
-        public ImageView getImageViewIcon() {
-            return imageIcon;
+        @Override
+        public void onClick(View v) {
+            onClickListener.onItemClick(v, getAdapterPosition());
         }
+    }
 
-        public TextView getTextViewName() {
-            return textName;
-        }
-
-        public TextView getTextViewAddress() {
-            return textAddress;
-        }
+    public interface OnItemClickListener {
+        public void onItemClick(View view, int position);
     }
 }

@@ -7,7 +7,10 @@
     android:layout_height="80dp"
     android:paddingHorizontal="24dp"
     android:paddingVertical="16dp"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:background="?attr/selectableItemBackground"
+    android:focusable="true"
+    android:clickable="true">
 
     <ImageView
         android:id="@+id/image_device_icon"

@@ -143,7 +143,6 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
                     serialDevice.setProducer(json.optString("producer"));
                     Log.i(TAG,"Found serial device.");
                 } catch (JSONException e) {
-                    serialDevice.setName("未知设备");
                     Log.i(TAG,"Unknown serial device.");
                 } finally {
                     serialPort.syncClose();
@@ -177,7 +176,6 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
             device.setVersion(descriptor.getModelNumber());
             device.setProducer(descriptor.getManufacturer());
         } catch (IOException e) {
-            device.setName("未知设备");
             Log.i(TAG,"Unknown ssdp device.");
         }
         for (ScanCallback callback : callbacks) {
