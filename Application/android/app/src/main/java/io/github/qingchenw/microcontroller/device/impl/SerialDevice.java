@@ -1,21 +1,29 @@
 package io.github.qingchenw.microcontroller.device.impl;
 
-import com.felhr.usbserial.UsbSerialDevice;
-import com.felhr.usbserial.UsbSerialInterface;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
 
+import com.hoho.android.usbserial.driver.UsbSerialPort;
+import com.hoho.android.usbserial.util.SerialInputOutputManager;
+
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import io.github.qingchenw.microcontroller.MCUApplication;
 import io.github.qingchenw.microcontroller.R;
 
-public class SerialDevice extends BaseDevice implements UsbSerialInterface.UsbReadCallback {
+public class SerialDevice extends BaseDevice implements SerialInputOutputManager.Listener {
     static private final byte[] CRLF = { '\r', '\n' };
 
-    private UsbSerialDevice serialDevice;
+    private UsbDevice usbDevice;
+    private UsbSerialPort serialPort;
+    private SerialInputOutputManager serialIoManager;
     private ByteBuffer buffer;
     private Callback callback;
 
-    public SerialDevice(UsbSerialDevice serialDevice) {
-        this.serialDevice = serialDevice;
+    public SerialDevice(UsbDevice usbDevice, UsbSerialPort serialPort) {
+        this.usbDevice = usbDevice;
+        this.serialPort = serialPort;
         this.buffer = ByteBuffer.allocate(512);
     }
 
@@ -26,7 +34,7 @@ public class SerialDevice extends BaseDevice implements UsbSerialInterface.UsbRe
 
     @Override
     public String getAddress() {
-        return this.serialDevice.getPortName();
+        return usbDevice.getDeviceName();
     }
 
     @Override
@@ -36,47 +44,68 @@ public class SerialDevice extends BaseDevice implements UsbSerialInterface.UsbRe
 
     @Override
     public boolean isConnected() {
-        return this.serialDevice.isOpen();
+        return serialPort.isOpen();
     }
 
     @Override
     public void connect() {
-        if (this.serialDevice.open()) {
-            this.serialDevice.read(this);
-            if (this.callback != null)
-                this.callback.onConnected(this);
+        UsbDeviceConnection usbConnection = MCUApplication.getUsbManager().openDevice(usbDevice);
+        try {
+            serialPort.open(usbConnection);
+            serialIoManager = new SerialInputOutputManager(serialPort, this);
+            serialIoManager.start();
+            if (callback != null)
+                callback.onConnected(this);
+        } catch (IOException | IllegalStateException e) {
+            if (callback != null)
+                callback.onError(this, e.getLocalizedMessage());
         }
     }
 
     @Override
     public void disconnect() {
-        this.serialDevice.close();
-        if (this.callback != null)
-            this.callback.onDisconnected(this);
+        try {
+            serialPort.close();
+            serialIoManager.stop();
+            serialIoManager = null;
+            if (callback != null)
+                callback.onDisconnected(this);
+        } catch (IOException e) {
+            if (callback != null)
+                callback.onError(this, e.getLocalizedMessage());
+        }
     }
 
     @Override
     public void send(byte[] data) {
-        this.serialDevice.write(data);
-        this.serialDevice.write(CRLF);
+        serialIoManager.writeAsync(data);
+        serialIoManager.writeAsync(CRLF);
     }
 
     @Override
-    public void onReceivedData(byte[] data) {
+    public void onNewData(byte[] data) {
         for (byte b : data) {
-            int position = this.buffer.position();
-            if (!this.buffer.hasRemaining() || b == '\n' && position > 0 && this.buffer.get(position - 1) == '\r') {
-                this.buffer.flip();
-                byte[] bytes = new byte[this.buffer.limit() - 1];
+            int position = buffer.position();
+            if (!buffer.hasRemaining() || b == '\n' && position > 0 && buffer.get(position - 1) == '\r') {
+                buffer.flip();
+                byte[] bytes = new byte[buffer.limit() - 1];
                 if (bytes.length > 0) {
-                    this.buffer.get(bytes);
-                    if (this.callback != null)
-                        this.callback.onDataReceived(this, bytes);
+                    buffer.get(bytes);
+                    if (callback != null)
+                        callback.onDataReceived(this, bytes);
                 }
-                this.buffer.clear();
+                buffer.clear();
             } else {
-                this.buffer.put(b);
+                buffer.put(b);
             }
         }
+    }
+
+    @Override
+    public void onRunError(Exception e) {
+        if (callback != null)
+            callback.onError(SerialDevice.this, e.getLocalizedMessage());
+        disconnect();
+        notifyRemove();
     }
 }

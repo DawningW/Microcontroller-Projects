@@ -39,4 +39,17 @@
             android:text="流光" />
     </LinearLayout>
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="灯光颜色"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+
+    <com.skydoves.colorpickerview.ColorPickerView
+        android:id="@+id/colorPicker"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        app:actionMode="always"
+        app:debounceDuration="200" />
+
 </LinearLayout>

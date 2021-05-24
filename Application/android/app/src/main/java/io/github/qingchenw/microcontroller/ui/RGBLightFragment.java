@@ -26,7 +26,7 @@ public class RGBLightFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         viewBinding = FragmentRgblightBinding.inflate(inflater, container, false);
-
+        viewBinding.colorPicker.setLifecycleOwner(this);
         return viewBinding.getRoot();
     }
 }

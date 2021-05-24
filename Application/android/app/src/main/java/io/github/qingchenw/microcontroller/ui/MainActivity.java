@@ -16,22 +16,22 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
-import com.permissionx.guolindev.PermissionX;
+import com.hjq.permissions.OnPermissionCallback;
+import com.hjq.permissions.XXPermissions;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 import io.github.qingchenw.microcontroller.R;
 import io.github.qingchenw.microcontroller.Utils;
 import io.github.qingchenw.microcontroller.databinding.ActivityMainBinding;
 import io.github.qingchenw.microcontroller.viewmodel.DeviceViewModel;
-import okhttp3.internal.Util;
 
 /**
  * Main Activity
  *
  * @author wc
  */
-// TODO 标题栏菜单加入扫一扫和NFC
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding viewBinding;
     private ActionBarDrawerToggle drawerToggle;
@@ -93,14 +93,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestPermissions() {
-        PermissionX.init(this)
-                .permissions(Manifest.permission.BLUETOOTH, Manifest.permission.ACCESS_FINE_LOCATION)
-                .explainReasonBeforeRequest()
-                .onExplainRequestReason((scope, deniedList) -> scope.showRequestReasonDialog(deniedList, getString(R.string.permission_reason), getString(android.R.string.ok)))
-                .onForwardToSettings((scope, deniedList) -> scope.showForwardToSettingsDialog(deniedList, getString(R.string.permission_failed), getString(android.R.string.ok)))
-                .request((allGranted, grantedList, deniedList) -> {
-                    if (allGranted) {
-                        Utils.toast(MainActivity.this, getString(R.string.permission_ok));
+        Utils.toast(MainActivity.this, getString(R.string.permission_reason));
+        XXPermissions.with(this)
+                .permission(new String[]{Manifest.permission.ACCESS_FINE_LOCATION})
+                .request(new OnPermissionCallback() {
+                    @Override
+                    public void onGranted(List<String> permissions, boolean all) {
+                        if (all) {
+                            Utils.toast(MainActivity.this, getString(R.string.permission_ok));
+                        }
+                    }
+
+                    @Override
+                    public void onDenied(List<String> permissions, boolean never) {
+                        if (never) {
+                            Utils.toast(MainActivity.this, getString(R.string.permission_failed));
+                            XXPermissions.startPermissionActivity(MainActivity.this, permissions);
+                        } else {
+                            requestPermissions();
+                        }
                     }
                 });
     }

@@ -116,7 +116,8 @@ public class DebugFragment extends Fragment implements IDevice.Callback {
                     viewBinding.spinnerDevices.setSelection(devices.indexOf(device));
                     return;
                 } else {
-                    device.disconnect();
+                    if (device.isConnected())
+                        device.disconnect();
                     device = null;
                 }
             }

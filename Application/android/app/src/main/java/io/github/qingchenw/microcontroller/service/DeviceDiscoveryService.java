@@ -1,15 +1,23 @@
 package io.github.qingchenw.microcontroller.service;
 
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.felhr.usbserial.SerialPortBuilder;
-import com.felhr.usbserial.SerialPortCallback;
-import com.felhr.usbserial.UsbSerialDevice;
-import com.felhr.usbserial.UsbSerialInterface;
+import com.clj.fastble.BleManager;
+import com.clj.fastble.data.BleScanState;
+import com.hoho.android.usbserial.driver.SerialTimeoutException;
+import com.hoho.android.usbserial.driver.UsbSerialDriver;
+import com.hoho.android.usbserial.driver.UsbSerialPort;
+import com.hoho.android.usbserial.driver.UsbSerialProber;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,11 +28,13 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import io.github.qingchenw.microcontroller.BuildConfig;
 import io.github.qingchenw.microcontroller.Utils;
-import io.github.qingchenw.microcontroller.device.impl.SerialDevice;
-import io.github.qingchenw.microcontroller.device.impl.WebSocketDevice;
 import io.github.qingchenw.microcontroller.device.IDevice;
 import io.github.qingchenw.microcontroller.device.SSDPDescriptor;
+import io.github.qingchenw.microcontroller.device.impl.BluetoothDevice;
+import io.github.qingchenw.microcontroller.device.impl.SerialDevice;
+import io.github.qingchenw.microcontroller.device.impl.WebSocketDevice;
 import io.resourcepool.ssdp.client.SsdpClient;
 import io.resourcepool.ssdp.model.DiscoveryListener;
 import io.resourcepool.ssdp.model.SsdpRequest;
@@ -34,25 +44,44 @@ import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public final class DeviceDiscoveryService extends Service implements SerialPortCallback, DiscoveryListener {
-    static private final String TAG = "DeviceDiscoverySrv";
+public final class DeviceDiscoveryService extends Service implements DiscoveryListener {
+    private static final String TAG = "DeviceDiscoverySrv";
+    private static final String INTENT_ACTION_GRANT_USB = BuildConfig.APPLICATION_ID + ".GRANT_USB";
     // Supported baud rates
     // 300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600
-    static private final int BAUD_RATE = 9600;
+    private static final int BAUD_RATE = 9600;
 
     private final ServiceBinder binder = new ServiceBinder();
+    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (INTENT_ACTION_GRANT_USB.equals(intent.getAction())) {
+                boolean hasPermission =
+                        intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false);
+                if (hasPermission) {
+                    scanSerial();
+                } else {
+                    Utils.toast(getBaseContext(), "您拒绝了授予访问USB设备的权限, 已停止扫描USB串口");
+                }
+            }
+        }
+    };
+    private final List<ScanCallback> callbacks = new ArrayList<>();
     private boolean isScanning = false;
-    private List<ScanCallback> callbacks;
     private Timer timer;
-    private SerialPortBuilder serialBuilder;
+    private UsbManager usbManager;
+    private List<SerialDevice> serialDevices = new ArrayList<>();
+    private BleManager bleManager;
+    private List<BluetoothDevice> bleDevices = new ArrayList<>();
     private SsdpClient SSDPClient;
+    private List<WebSocketDevice> wsDevices = new ArrayList<>();
 
     @Override
     public void onCreate() {
-        callbacks = new ArrayList<>();
-        timer = new Timer();
-        serialBuilder = SerialPortBuilder.createSerialPortBuilder(this);
-        SSDPClient = SsdpClient.create();
+        registerReceiver(broadcastReceiver, new IntentFilter(INTENT_ACTION_GRANT_USB));
+        usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+        bleManager = BleManager.getInstance();
+        bleManager.init(getApplication());
     }
 
     @Override
@@ -68,6 +97,8 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
     @Override
     public void onDestroy() {
         stopScan();
+        bleManager.destroy();
+        unregisterReceiver(broadcastReceiver);
     }
 
     public void addScanCallback(ScanCallback callback) {
@@ -89,17 +120,20 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
             for (ScanCallback callback : callbacks) {
                 callback.onScanStart();
             }
-            serialBuilder.openSerialPorts(this, BAUD_RATE,
-                    UsbSerialInterface.DATA_BITS_8,
-                    UsbSerialInterface.STOP_BITS_1,
-                    UsbSerialInterface.PARITY_NONE,
-                    UsbSerialInterface.FLOW_CONTROL_OFF);
-            SSDPClient.discoverServices(SsdpRequest.discoverAll(), this);
+            scanSerial();
+            if (bleManager.isBlueEnable()) {
+                scanBluetooth();
+            }
+            if (Utils.isWifiConnected(this)) {
+                scanSSDP();
+            }
         } else {
             timer.cancel();
-            timer = new Timer();
+            timer.purge();
+            timer = null;
         }
         if (timeout > 0) {
+            timer = new Timer();
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
@@ -112,10 +146,15 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
     public void stopScan() {
         if (isScanning) {
             timer.cancel();
-            timer = new Timer();
-            serialBuilder.unregisterListeners(this);
-            SSDPClient.stopDiscovery();
-            SSDPClient = SsdpClient.create();
+            timer.purge();
+            timer = null;
+            if (bleManager.getScanSate() == BleScanState.STATE_SCANNING) {
+                bleManager.cancelScan();
+            }
+            if (SSDPClient != null) {
+                SSDPClient.stopDiscovery();
+                SSDPClient = null;
+            }
             for (ScanCallback callback : callbacks) {
                 callback.onScanStop();
             }
@@ -124,37 +163,66 @@ public final class DeviceDiscoveryService extends Service implements SerialPortC
         }
     }
 
-    @Override
-    public void onSerialPortsDetected(List<UsbSerialDevice> serialPorts) {
-        for (UsbSerialDevice serialPort : serialPorts) {
-            if (serialPort.isOpen()) {
-                Log.i(TAG,"Connect to serial successfully.");
-                SerialDevice serialDevice = new SerialDevice(serialPort);
-                try {
-                    serialPort.syncWrite("info\r\n".getBytes(), 200);
-                    byte[] buffer = new byte[256];
-                    serialPort.syncRead(buffer, 1000);
-                    String str = new String(buffer).trim();
-                    JSONObject json = new JSONObject(str);
-                    serialDevice.setName(json.getString("name"));
-                    serialDevice.setID(json.getString("id"));
-                    serialDevice.setModel(json.getString("model"));
-                    serialDevice.setVersion(json.getString("version"));
-                    serialDevice.setProducer(json.optString("producer"));
-                    Log.i(TAG,"Found serial device.");
-                } catch (JSONException e) {
-                    Log.i(TAG,"Unknown serial device.");
-                } finally {
-                    serialPort.syncClose();
-                }
-                for (ScanCallback callback : callbacks) {
-                    callback.onDeviceScanned(serialDevice);
-                }
+    private void scanSerial() {
+        List<UsbSerialDriver> drivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager);
+        for (UsbSerialDriver driver : drivers) {
+            if (usbManager.hasPermission(driver.getDevice())) {
+                onSerialPortsDetected(driver);
             } else {
-                Log.e(TAG,"Connect to serial failed.");
-                serialBuilder.disconnectDevice(serialPort);
+                PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
+                        this, 0, new Intent(INTENT_ACTION_GRANT_USB), 0);
+                usbManager.requestPermission(driver.getDevice(), usbPermissionIntent);
+                return;
             }
         }
+    }
+
+    public void onSerialPortsDetected(UsbSerialDriver usbSerialDriver) {
+        UsbDeviceConnection usbConnection = usbManager.openDevice(usbSerialDriver.getDevice());
+        if (usbConnection != null) {
+            for (UsbSerialPort serialPort : usbSerialDriver.getPorts()) {
+                try {
+                    serialPort.open(usbConnection);
+                    serialPort.setParameters(BAUD_RATE, UsbSerialPort.DATABITS_8,
+                            UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
+                    Log.i(TAG,"Connect to serial successfully.");
+                    SerialDevice serialDevice = new SerialDevice(usbSerialDriver.getDevice(), serialPort);
+                    try {
+                        serialPort.write("info\r\n".getBytes(), 200);
+                        byte[] buffer = new byte[256];
+                        serialPort.read(buffer, 1000);
+                        String str = new String(buffer).trim();
+                        JSONObject json = new JSONObject(str);
+                        serialDevice.setName(json.getString("name"));
+                        serialDevice.setID(json.getString("id"));
+                        serialDevice.setModel(json.getString("model"));
+                        serialDevice.setVersion(json.getString("version"));
+                        serialDevice.setProducer(json.optString("producer"));
+                        Log.i(TAG,"Found serial device.");
+                    } catch (SerialTimeoutException | JSONException e) {
+                        Log.i(TAG,"Unknown serial device.");
+                    } finally {
+                        serialPort.close();
+                    }
+                    for (ScanCallback callback : callbacks) {
+                        callback.onDeviceScanned(serialDevice);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG,"Connect to serial failed.");
+                }
+            }
+        } else {
+            Log.e(TAG, "Can't open USB connection.");
+        }
+    }
+
+    private void scanBluetooth() {
+
+    }
+
+    private void scanSSDP() {
+        SSDPClient = SsdpClient.create();
+        SSDPClient.discoverServices(SsdpRequest.discoverAll(), this);
     }
 
     @Override

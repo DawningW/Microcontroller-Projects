@@ -31,7 +31,7 @@ public class WebSocketDevice extends BaseDevice {
 
     @Override
     public String getAddress() {
-        return this.address;
+        return address;
     }
 
     @Override
@@ -63,7 +63,7 @@ public class WebSocketDevice extends BaseDevice {
     }
 
     public String getWebpage() {
-        return this.webpage;
+        return webpage;
     }
 
     public void setWebpage(String webpage) {
@@ -96,7 +96,7 @@ public class WebSocketDevice extends BaseDevice {
             isConnected = false;
             if (callback != null) {
                 callback.onError(WebSocketDevice.this, t.getLocalizedMessage());
-                callback.onDisconnected(WebSocketDevice.this);
+                callback.onDisconnected(WebSocketDevice.this); // FIXME 出错后会调用onClosed嘛
             }
             notifyRemove();
         }
