@@ -1,14 +1,14 @@
 package io.github.qingchenw.microcontroller.device.impl;
 
-import io.github.qingchenw.microcontroller.device.DeviceManager;
+import io.github.qingchenw.microcontroller.MCUApplication;
 import io.github.qingchenw.microcontroller.device.IDevice;
 
 public abstract class BaseDevice implements IDevice {
-    String name;
-    String id;
-    String model;
-    String version;
-    String producer;
+    private String name;
+    private String id;
+    private String model;
+    private String version;
+    private String producer;
 
     @Override
     public String getName() {
@@ -61,6 +61,6 @@ public abstract class BaseDevice implements IDevice {
     }
 
     protected void notifyRemove() {
-        DeviceManager.getInstance().removeDevice(this);
+        MCUApplication.getInstance().getDeviceService().removeDevice(this);
     }
 }

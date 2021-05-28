@@ -29,9 +29,9 @@ import io.github.qingchenw.microcontroller.viewmodel.DeviceViewModel;
  * @author wc
  */
 public class ScanFragment extends Fragment implements DeviceListAdapter.OnItemClickListener {
-    private DeviceViewModel deviceViewModel;
     private FragmentScanBinding viewBinding;
     private DeviceListAdapter adapter;
+    private DeviceViewModel deviceViewModel;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -86,7 +86,7 @@ public class ScanFragment extends Fragment implements DeviceListAdapter.OnItemCl
                 .setView(root)
                 .setPositiveButton("连接", (dialog, id) -> {
                     Utils.toast(getContext(), "添加设备尚未实现");
-                    // 添加设备
+                    // TODO 添加设备
                 })
                 .setNegativeButton(android.R.string.cancel, null);
         builder.show();

@@ -33,10 +33,61 @@
             android:text="闪烁" />
 
         <Button
+            android:id="@+id/button_breath"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="呼吸" />
+
+        <Button
+            android:id="@+id/button_chase"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="跑马灯" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/button_rainbow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="彩虹" />
+
+        <Button
             android:id="@+id/button_stream"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="流光" />
+
+        <Button
+            android:id="@+id/button_animation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="动画" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/button_music"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="音乐律动" />
+
+        <Button
+            android:id="@+id/button_custom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="上位机控制" />
+
     </LinearLayout>
 
     <TextView
@@ -47,8 +98,9 @@
 
     <com.skydoves.colorpickerview.ColorPickerView
         android:id="@+id/colorPicker"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         app:actionMode="always"
         app:debounceDuration="200" />
 

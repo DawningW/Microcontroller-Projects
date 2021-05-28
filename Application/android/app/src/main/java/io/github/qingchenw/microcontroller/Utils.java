@@ -1,6 +1,7 @@
 package io.github.qingchenw.microcontroller;
 
 import android.content.Context;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.widget.Toast;
@@ -14,6 +15,13 @@ public final class Utils {
 
     private Utils() {}
 
+    private boolean isGPSEnabled(Context context) {
+        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        if (locationManager == null)
+            return false;
+        return locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER);
+    }
+
     public static boolean isWifiConnected(Context context) {
         ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = manager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
@@ -21,9 +29,8 @@ public final class Utils {
     }
 
     public static OkHttpClient getHttpClient() {
-        if (httpClient == null) {
+        if (httpClient == null)
             httpClient = new OkHttpClient();
-        }
         return httpClient;
     }
 

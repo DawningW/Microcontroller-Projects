@@ -2,6 +2,7 @@ package io.github.qingchenw.microcontroller.device.impl;
 
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbManager;
 
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.util.SerialInputOutputManager;
@@ -9,20 +10,21 @@ import com.hoho.android.usbserial.util.SerialInputOutputManager;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import io.github.qingchenw.microcontroller.MCUApplication;
 import io.github.qingchenw.microcontroller.R;
 
 public class SerialDevice extends BaseDevice implements SerialInputOutputManager.Listener {
     static private final byte[] CRLF = { '\r', '\n' };
 
+    private UsbManager usbManager;
     private UsbDevice usbDevice;
     private UsbSerialPort serialPort;
     private SerialInputOutputManager serialIoManager;
     private ByteBuffer buffer;
     private Callback callback;
 
-    public SerialDevice(UsbDevice usbDevice, UsbSerialPort serialPort) {
-        this.usbDevice = usbDevice;
+    public SerialDevice(UsbManager usbManager, UsbSerialPort serialPort) {
+        this.usbManager = usbManager;
+        this.usbDevice = serialPort.getDevice();
         this.serialPort = serialPort;
         this.buffer = ByteBuffer.allocate(512);
     }
@@ -49,7 +51,7 @@ public class SerialDevice extends BaseDevice implements SerialInputOutputManager
 
     @Override
     public void connect() {
-        UsbDeviceConnection usbConnection = MCUApplication.getUsbManager().openDevice(usbDevice);
+        UsbDeviceConnection usbConnection = usbManager.openDevice(usbDevice);
         try {
             serialPort.open(usbConnection);
             serialIoManager = new SerialInputOutputManager(serialPort, this);

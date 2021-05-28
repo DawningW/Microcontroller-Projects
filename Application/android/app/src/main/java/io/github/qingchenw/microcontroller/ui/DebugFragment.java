@@ -116,6 +116,7 @@ public class DebugFragment extends Fragment implements IDevice.Callback {
                     viewBinding.spinnerDevices.setSelection(devices.indexOf(device));
                     return;
                 } else {
+                    device.setCallback(null);
                     if (device.isConnected())
                         device.disconnect();
                     device = null;
@@ -158,7 +159,6 @@ public class DebugFragment extends Fragment implements IDevice.Callback {
     @Override
     public void onError(IDevice device, String error) {
         handler.post(() -> {
-            deviceViewModel.removeDevice(device);
             addText("错误: " + error);
         });
     }

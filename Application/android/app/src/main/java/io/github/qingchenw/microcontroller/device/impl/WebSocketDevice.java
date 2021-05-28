@@ -96,7 +96,7 @@ public class WebSocketDevice extends BaseDevice {
             isConnected = false;
             if (callback != null) {
                 callback.onError(WebSocketDevice.this, t.getLocalizedMessage());
-                callback.onDisconnected(WebSocketDevice.this); // FIXME 出错后会调用onClosed嘛
+                callback.onDisconnected(WebSocketDevice.this);
             }
             notifyRemove();
         }

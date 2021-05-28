@@ -13,6 +13,8 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.clj.fastble.BleManager;
+import com.clj.fastble.callback.BleScanCallback;
+import com.clj.fastble.data.BleDevice;
 import com.clj.fastble.data.BleScanState;
 import com.hoho.android.usbserial.driver.SerialTimeoutException;
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
@@ -24,15 +26,17 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import io.github.qingchenw.microcontroller.BuildConfig;
 import io.github.qingchenw.microcontroller.Utils;
+import io.github.qingchenw.microcontroller.device.DeviceManager;
 import io.github.qingchenw.microcontroller.device.IDevice;
 import io.github.qingchenw.microcontroller.device.SSDPDescriptor;
-import io.github.qingchenw.microcontroller.device.impl.BluetoothDevice;
 import io.github.qingchenw.microcontroller.device.impl.SerialDevice;
 import io.github.qingchenw.microcontroller.device.impl.WebSocketDevice;
 import io.resourcepool.ssdp.client.SsdpClient;
@@ -67,14 +71,12 @@ public final class DeviceDiscoveryService extends Service implements DiscoveryLi
         }
     };
     private final List<ScanCallback> callbacks = new ArrayList<>();
+    private final List<IDevice> devices = new ArrayList<>();
     private boolean isScanning = false;
     private Timer timer;
     private UsbManager usbManager;
-    private List<SerialDevice> serialDevices = new ArrayList<>();
     private BleManager bleManager;
-    private List<BluetoothDevice> bleDevices = new ArrayList<>();
     private SsdpClient SSDPClient;
-    private List<WebSocketDevice> wsDevices = new ArrayList<>();
 
     @Override
     public void onCreate() {
@@ -99,6 +101,7 @@ public final class DeviceDiscoveryService extends Service implements DiscoveryLi
         stopScan();
         bleManager.destroy();
         unregisterReceiver(broadcastReceiver);
+        devices.clear();
     }
 
     public void addScanCallback(ScanCallback callback) {
@@ -107,6 +110,10 @@ public final class DeviceDiscoveryService extends Service implements DiscoveryLi
 
     public void removeScanCallback(ScanCallback callback) {
         callbacks.remove(callback);
+    }
+
+    public List<IDevice> getScannedDevices() {
+        return devices;
     }
 
     public boolean isScanning() {
@@ -120,8 +127,14 @@ public final class DeviceDiscoveryService extends Service implements DiscoveryLi
             for (ScanCallback callback : callbacks) {
                 callback.onScanStart();
             }
+            Iterator<IDevice> iterator = devices.iterator();
+            while (iterator.hasNext()) {
+                if (!iterator.next().isConnected()) {
+                    iterator.remove();
+                }
+            }
             scanSerial();
-            if (bleManager.isBlueEnable()) {
+            if (bleManager.isSupportBle() && bleManager.isBlueEnable()) {
                 scanBluetooth();
             }
             if (Utils.isWifiConnected(this)) {
@@ -163,11 +176,21 @@ public final class DeviceDiscoveryService extends Service implements DiscoveryLi
         }
     }
 
+    private boolean hasDevice(String address) {
+        for (IDevice device : devices) {
+            if (device.getAddress().equals(address))
+                return true;
+        }
+        return false;
+    }
+
     private void scanSerial() {
         List<UsbSerialDriver> drivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager);
         for (UsbSerialDriver driver : drivers) {
             if (usbManager.hasPermission(driver.getDevice())) {
-                onSerialPortsDetected(driver);
+                for (UsbSerialPort port : driver.getPorts()) {
+                    onSerialPortsDetected(port);
+                }
             } else {
                 PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(
                         this, 0, new Intent(INTENT_ACTION_GRANT_USB), 0);
@@ -177,39 +200,40 @@ public final class DeviceDiscoveryService extends Service implements DiscoveryLi
         }
     }
 
-    public void onSerialPortsDetected(UsbSerialDriver usbSerialDriver) {
-        UsbDeviceConnection usbConnection = usbManager.openDevice(usbSerialDriver.getDevice());
+    public void onSerialPortsDetected(UsbSerialPort serialPort) {
+        if (hasDevice(serialPort.getDevice().getDeviceName()))
+            return;
+        UsbDeviceConnection usbConnection = usbManager.openDevice(serialPort.getDevice());
         if (usbConnection != null) {
-            for (UsbSerialPort serialPort : usbSerialDriver.getPorts()) {
+            try {
+                serialPort.open(usbConnection);
+                serialPort.setParameters(BAUD_RATE, UsbSerialPort.DATABITS_8,
+                        UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
+                Log.i(TAG,"Connect to serial device successfully.");
+                SerialDevice device = new SerialDevice(usbManager, serialPort);
                 try {
-                    serialPort.open(usbConnection);
-                    serialPort.setParameters(BAUD_RATE, UsbSerialPort.DATABITS_8,
-                            UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
-                    Log.i(TAG,"Connect to serial successfully.");
-                    SerialDevice serialDevice = new SerialDevice(usbSerialDriver.getDevice(), serialPort);
-                    try {
-                        serialPort.write("info\r\n".getBytes(), 200);
-                        byte[] buffer = new byte[256];
-                        serialPort.read(buffer, 1000);
-                        String str = new String(buffer).trim();
-                        JSONObject json = new JSONObject(str);
-                        serialDevice.setName(json.getString("name"));
-                        serialDevice.setID(json.getString("id"));
-                        serialDevice.setModel(json.getString("model"));
-                        serialDevice.setVersion(json.getString("version"));
-                        serialDevice.setProducer(json.optString("producer"));
-                        Log.i(TAG,"Found serial device.");
-                    } catch (SerialTimeoutException | JSONException e) {
-                        Log.i(TAG,"Unknown serial device.");
-                    } finally {
-                        serialPort.close();
-                    }
-                    for (ScanCallback callback : callbacks) {
-                        callback.onDeviceScanned(serialDevice);
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG,"Connect to serial failed.");
+                    serialPort.write("info\r\n".getBytes(), 200);
+                    byte[] buffer = new byte[256];
+                    serialPort.read(buffer, 1000);
+                    String str = new String(buffer).trim();
+                    JSONObject json = new JSONObject(str);
+                    device.setName(json.getString("name"));
+                    device.setID(json.getString("id"));
+                    device.setModel(json.getString("model"));
+                    device.setVersion(json.getString("version"));
+                    device.setProducer(json.optString("producer"));
+                    Log.i(TAG,"Found serial device.");
+                } catch (SerialTimeoutException | JSONException e) {
+                    Log.i(TAG,"Unknown serial device.");
+                } finally {
+                    serialPort.close();
                 }
+                devices.add(device);
+                for (ScanCallback callback : callbacks) {
+                    callback.onDeviceScanned(device);
+                }
+            } catch (Exception e) {
+                Log.e(TAG,"Connect to serial device failed.");
             }
         } else {
             Log.e(TAG, "Can't open USB connection.");
@@ -217,7 +241,27 @@ public final class DeviceDiscoveryService extends Service implements DiscoveryLi
     }
 
     private void scanBluetooth() {
+        BleManager.getInstance().scan(new BleScanCallback() {
+            @Override
+            public void onScanStarted(boolean success) {
 
+            }
+
+            @Override
+            public void onScanning(BleDevice bleDevice) {
+
+            }
+
+            @Override
+            public void onLeScan(BleDevice bleDevice) {
+
+            }
+
+            @Override
+            public void onScanFinished(List<BleDevice> scanResultList) {
+
+            }
+        });
     }
 
     private void scanSSDP() {
@@ -227,6 +271,8 @@ public final class DeviceDiscoveryService extends Service implements DiscoveryLi
 
     @Override
     public void onServiceDiscovered(SsdpService ssdpService) {
+        if (hasDevice(ssdpService.getRemoteIp().getHostAddress()))
+            return;
         Log.i(TAG,"Discovery device through SSDP.");
         WebSocketDevice device = new WebSocketDevice(ssdpService.getRemoteIp().getHostAddress());
         try {
@@ -235,7 +281,7 @@ public final class DeviceDiscoveryService extends Service implements DiscoveryLi
                     .build();
             Call call = Utils.getHttpClient().newCall(request);
             Response response = call.execute();
-            String str = response.body().string();
+            String str = Objects.requireNonNull(response.body()).string();
             SSDPDescriptor descriptor = SSDPDescriptor.parse(str);
             device.setWebpage(descriptor.getURLBase());
             device.setName(descriptor.getFriendlyName());
@@ -243,9 +289,10 @@ public final class DeviceDiscoveryService extends Service implements DiscoveryLi
             device.setModel(descriptor.getModelName());
             device.setVersion(descriptor.getModelNumber());
             device.setProducer(descriptor.getManufacturer());
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             Log.i(TAG,"Unknown ssdp device.");
         }
+        devices.add(device);
         for (ScanCallback callback : callbacks) {
             callback.onDeviceScanned(device);
         }
@@ -262,6 +309,14 @@ public final class DeviceDiscoveryService extends Service implements DiscoveryLi
         stopScan();
     }
 
+    public void removeDevice(IDevice device) {
+        if (devices.remove(device)) {
+            for (ScanCallback callback : callbacks) {
+                callback.onDeviceRemoved(device);
+            }
+        }
+    }
+
     public class ServiceBinder extends Binder {
         public DeviceDiscoveryService getService() {
             return DeviceDiscoveryService.this;
@@ -272,5 +327,6 @@ public final class DeviceDiscoveryService extends Service implements DiscoveryLi
         void onScanStart();
         void onDeviceScanned(IDevice device);
         void onScanStop();
+        void onDeviceRemoved(IDevice device);
     }
 }

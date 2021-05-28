@@ -34,7 +34,6 @@ import io.github.qingchenw.microcontroller.viewmodel.DeviceViewModel;
  */
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding viewBinding;
-    private ActionBarDrawerToggle drawerToggle;
     private NavController navController;
     private DeviceViewModel deviceViewModel;
 
@@ -54,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         AndroidViewModelFactory factory = AndroidViewModelFactory.getInstance(getApplication());
         deviceViewModel = new ViewModelProvider(this, factory).get(DeviceViewModel.class);
         deviceViewModel.getDevices().observe(this, devices -> {
-
+            // 更新导航栏设备状态
         });
     }
 
@@ -95,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
     private void requestPermissions() {
         Utils.toast(MainActivity.this, getString(R.string.permission_reason));
         XXPermissions.with(this)
-                .permission(new String[]{Manifest.permission.ACCESS_FINE_LOCATION})
+                .permission(new String[] {Manifest.permission.ACCESS_FINE_LOCATION})
                 .request(new OnPermissionCallback() {
                     @Override
                     public void onGranted(List<String> permissions, boolean all) {

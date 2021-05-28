@@ -36,6 +36,11 @@
             android:icon="@drawable/ic_debug_24"
             android:description="@string/service_device_description" />
 
+        <service
+            android:enabled="true"
+            android:exported="false"
+            android:name=".service.MusicEffectService" />
+
         <activity
             android:name=".ui.MainActivity"
             android:label="@string/app_name"

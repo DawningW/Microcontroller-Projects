@@ -12,11 +12,11 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
-import io.github.qingchenw.microcontroller.Utils;
+import io.github.qingchenw.microcontroller.device.DeviceManager;
 import io.github.qingchenw.microcontroller.device.IDevice;
 import io.github.qingchenw.microcontroller.service.DeviceDiscoveryService;
 
@@ -39,9 +39,8 @@ public class DeviceViewModel extends AndroidViewModel implements DeviceDiscovery
             service = null;
         }
     };
-    private final List<IDevice> deviceList = new ArrayList<>();
     private final MutableLiveData<ScanState> scanState = new MutableLiveData<>(ScanState.STOPPED);
-    private final MutableLiveData<List<IDevice>> devices = new MutableLiveData<>(deviceList);
+    private final MutableLiveData<List<IDevice>> devices = new MutableLiveData<>(Collections.emptyList());
 
     public DeviceViewModel(@NonNull Application application) {
         super(application);
@@ -66,7 +65,7 @@ public class DeviceViewModel extends AndroidViewModel implements DeviceDiscovery
     }
 
     public int getDeviceCount() {
-        return deviceList.size();
+        return Objects.requireNonNull(devices.getValue()).size();
     }
 
     public MutableLiveData<ScanState> getScanState() {
@@ -84,20 +83,12 @@ public class DeviceViewModel extends AndroidViewModel implements DeviceDiscovery
 
     @Override
     public void onDeviceScanned(IDevice device) {
-        Iterator<IDevice> iterator = deviceList.iterator();
-        while (iterator.hasNext()) {
-            IDevice oldDevice = iterator.next();
-            if (oldDevice.getAddress().equals(device.getAddress())) {
-                if (Utils.stringsAreEqualled(oldDevice.getID(), device.getID())) {
-                    return;
-                }
-                oldDevice.disconnect();
-                iterator.remove();
-                break;
-            }
+        // TODO 改成从数据库和服务器获取已绑定的设备
+        if (device.getModel().equals("WC-5")) {
+            device.connect();
+            DeviceManager.getInstance().addDevice(device);
         }
-        deviceList.add(device);
-        devices.postValue(deviceList);
+        devices.postValue(service.getScannedDevices());
     }
 
     @Override
@@ -105,10 +96,11 @@ public class DeviceViewModel extends AndroidViewModel implements DeviceDiscovery
         scanState.postValue(ScanState.STOPPED);
     }
 
-    public void removeDevice(IDevice device) {
-        if (deviceList.remove(device)) {
-            devices.postValue(deviceList);
-        }
+    @Override
+    public void onDeviceRemoved(IDevice device) {
+        if (DeviceManager.getInstance().hasDevice(device))
+            DeviceManager.getInstance().removeDevice(device);
+        devices.postValue(service.getScannedDevices());
     }
 
     public enum ScanState {
