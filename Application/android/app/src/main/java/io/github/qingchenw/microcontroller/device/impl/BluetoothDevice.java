@@ -19,11 +19,6 @@ public class BluetoothDevice extends BaseDevice {
     }
 
     @Override
-    public void setCallback(Callback callback) {
-
-    }
-
-    @Override
     public boolean isConnected() {
         return false;
     }

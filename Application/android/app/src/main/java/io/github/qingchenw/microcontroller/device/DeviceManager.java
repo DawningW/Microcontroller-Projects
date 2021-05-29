@@ -53,6 +53,17 @@ public final class DeviceManager {
         return devices.get(address);
     }
 
+    // TODO 仅供临时使用
+    @Deprecated
+    public IDevice getDeviceByModel(String model) {
+        for (IDevice device : devices.values()) {
+            if (model.equals(device.getModel())) {
+                return device;
+            }
+        }
+        return null;
+    }
+
     public void addDevice(IDevice device) {
         devices.put(device.getAddress(), device);
         if (!listeners.isEmpty()) {

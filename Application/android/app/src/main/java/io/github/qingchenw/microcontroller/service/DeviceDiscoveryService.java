@@ -34,7 +34,6 @@ import java.util.TimerTask;
 
 import io.github.qingchenw.microcontroller.BuildConfig;
 import io.github.qingchenw.microcontroller.Utils;
-import io.github.qingchenw.microcontroller.device.DeviceManager;
 import io.github.qingchenw.microcontroller.device.IDevice;
 import io.github.qingchenw.microcontroller.device.SSDPDescriptor;
 import io.github.qingchenw.microcontroller.device.impl.SerialDevice;
@@ -48,7 +47,7 @@ import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public final class DeviceDiscoveryService extends Service implements DiscoveryListener {
+public final class DeviceDiscoveryService extends Service implements DiscoveryListener, IDevice.Manager {
     private static final String TAG = "DeviceDiscoverySrv";
     private static final String INTENT_ACTION_GRANT_USB = BuildConfig.APPLICATION_ID + ".GRANT_USB";
     // Supported baud rates
@@ -211,6 +210,7 @@ public final class DeviceDiscoveryService extends Service implements DiscoveryLi
                         UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
                 Log.i(TAG,"Connect to serial device successfully.");
                 SerialDevice device = new SerialDevice(usbManager, serialPort);
+                device.setManager(this);
                 try {
                     serialPort.write("info\r\n".getBytes(), 200);
                     byte[] buffer = new byte[256];
@@ -275,6 +275,7 @@ public final class DeviceDiscoveryService extends Service implements DiscoveryLi
             return;
         Log.i(TAG,"Discovery device through SSDP.");
         WebSocketDevice device = new WebSocketDevice(ssdpService.getRemoteIp().getHostAddress());
+        device.setManager(this);
         try {
             Request request = new Request.Builder()
                     .url(ssdpService.getLocation())
@@ -309,7 +310,8 @@ public final class DeviceDiscoveryService extends Service implements DiscoveryLi
         stopScan();
     }
 
-    public void removeDevice(IDevice device) {
+    @Override
+    public void onReleased(IDevice device) {
         if (devices.remove(device)) {
             for (ScanCallback callback : callbacks) {
                 callback.onDeviceRemoved(device);

@@ -1,6 +1,5 @@
 package io.github.qingchenw.microcontroller.device.impl;
 
-import io.github.qingchenw.microcontroller.MCUApplication;
 import io.github.qingchenw.microcontroller.device.IDevice;
 
 public abstract class BaseDevice implements IDevice {
@@ -9,6 +8,8 @@ public abstract class BaseDevice implements IDevice {
     private String model;
     private String version;
     private String producer;
+    protected Manager manager;
+    protected Callback callback;
 
     @Override
     public String getName() {
@@ -60,7 +61,13 @@ public abstract class BaseDevice implements IDevice {
         this.producer = producer;
     }
 
-    protected void notifyRemove() {
-        MCUApplication.getInstance().getDeviceService().removeDevice(this);
+    @Override
+    public void setManager(Manager manager) {
+        this.manager = manager;
+    }
+
+    @Override
+    public void setCallback(Callback callback) {
+        this.callback = callback;
     }
 }

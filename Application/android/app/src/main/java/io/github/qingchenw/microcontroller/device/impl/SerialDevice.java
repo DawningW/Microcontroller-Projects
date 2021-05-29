@@ -20,7 +20,6 @@ public class SerialDevice extends BaseDevice implements SerialInputOutputManager
     private UsbSerialPort serialPort;
     private SerialInputOutputManager serialIoManager;
     private ByteBuffer buffer;
-    private Callback callback;
 
     public SerialDevice(UsbManager usbManager, UsbSerialPort serialPort) {
         this.usbManager = usbManager;
@@ -37,11 +36,6 @@ public class SerialDevice extends BaseDevice implements SerialInputOutputManager
     @Override
     public String getAddress() {
         return usbDevice.getDeviceName();
-    }
-
-    @Override
-    public void setCallback(Callback callback) {
-        this.callback = callback;
     }
 
     @Override
@@ -108,6 +102,7 @@ public class SerialDevice extends BaseDevice implements SerialInputOutputManager
         if (callback != null)
             callback.onError(SerialDevice.this, e.getLocalizedMessage());
         disconnect();
-        notifyRemove();
+        if (manager != null)
+            manager.onReleased(SerialDevice.this);
     }
 }

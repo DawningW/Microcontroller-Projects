@@ -18,7 +18,6 @@ public class WebSocketDevice extends BaseDevice {
     private String webpage;
     private boolean isConnected;
     private WebSocket webSocket;
-    private Callback callback;
 
     public WebSocketDevice(String address) {
         this.address = address;
@@ -34,10 +33,6 @@ public class WebSocketDevice extends BaseDevice {
         return address;
     }
 
-    @Override
-    public void setCallback(Callback callback) {
-        this.callback = callback;
-    }
 
     @Override
     public boolean isConnected() {
@@ -98,7 +93,8 @@ public class WebSocketDevice extends BaseDevice {
                 callback.onError(WebSocketDevice.this, t.getLocalizedMessage());
                 callback.onDisconnected(WebSocketDevice.this);
             }
-            notifyRemove();
+            if (manager != null)
+                manager.onReleased(WebSocketDevice.this);
         }
     }
 }

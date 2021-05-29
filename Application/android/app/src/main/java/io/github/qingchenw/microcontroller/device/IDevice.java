@@ -19,6 +19,7 @@ public interface IDevice {
 
     @DrawableRes int getIcon();
     String getAddress();
+    void setManager(Manager manager);
     void setCallback(Callback callback);
     boolean isConnected();
     void connect();
@@ -30,5 +31,9 @@ public interface IDevice {
         void onDisconnected(IDevice device);
         void onError(IDevice device, String error);
         void onDataReceived(IDevice device, byte[] data);
+    }
+
+    interface Manager {
+        void onReleased(IDevice device);
     }
 }

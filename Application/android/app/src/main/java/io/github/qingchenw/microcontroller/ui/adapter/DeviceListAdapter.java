@@ -15,11 +15,15 @@ import io.github.qingchenw.microcontroller.R;
 import io.github.qingchenw.microcontroller.device.IDevice;
 
 public class DeviceListAdapter extends RecyclerView.Adapter<DeviceListAdapter.DeviceViewHolder> {
-    private final List<IDevice> deviceList;
+    private List<IDevice> deviceList;
     private OnItemClickListener onClickListener;
 
     public DeviceListAdapter(List<IDevice> deviceList) {
         this.deviceList = deviceList;
+    }
+
+    public void setDeviceList(List<IDevice> list) {
+        deviceList = list;
     }
 
     public void setOnClickListener(OnItemClickListener listener) {
