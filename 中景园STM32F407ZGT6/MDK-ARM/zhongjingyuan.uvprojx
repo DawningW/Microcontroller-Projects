@@ -638,6 +638,11 @@
               <FileType>1</FileType>
               <FilePath>..\User\oled.c</FilePath>
             </File>
+            <File>
+              <FileName>rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\rtc.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

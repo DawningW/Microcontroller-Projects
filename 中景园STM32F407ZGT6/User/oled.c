@@ -5,7 +5,7 @@
 
 void oled_init(void)
 {
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOD | RCC_AHB1Periph_GPIOE | RCC_AHB1Periph_GPIOG, ENABLE); // 使能PORTA~E, PORTG时钟
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOD | RCC_AHB1Periph_GPIOE | RCC_AHB1Periph_GPIOG, ENABLE);
 
     GPIO_InitTypeDef GPIO_InitStructure;
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_1 | GPIO_Pin_15;
@@ -127,28 +127,25 @@ void oled_set_pos(uint8_t x, uint8_t y)
 
 void oled_fill(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t dot)
 {
-
+    // TODO
 }
 
 void oled_disp_char(uint8_t x, uint8_t y, uint8_t c)
 {
     c -= ' '; // 得到偏移后的值
-    if (x > OLED_WIDTH - 1) { x = 0; y += 2; }
-    if (SIZE == 16)
-    {
-        oled_set_pos(x, y);
-        for (uint8_t i = 0; i < 8; ++i)
-            oled_write_dat(F8X16[c * 16 + i]);
-        oled_set_pos(x, y + 1);
-        for (uint8_t i = 0; i < 8; ++i)
-            oled_write_dat(F8X16[c * 16 + i + 8]);
-    }
-    else
-    {
-        oled_set_pos(x, y + 1);
-        for (uint8_t i = 0; i < 6; ++i)
-            oled_write_dat(F6x8[c][i]);
-    }
+    if (x > OLED_WIDTH - 8) { x = 0; y += 2; }
+#if FONT_TYPE == 0
+    oled_set_pos(x, y + 1);
+    for (uint8_t i = 0; i < 6; ++i)
+        oled_write_dat(FONT_6X8[c][i]);
+#elif FONT_TYPE == 1
+    oled_set_pos(x, y);
+    for (uint8_t i = 0; i < 8; ++i)
+        oled_write_dat(FONT_8X16[c * 16 + i]);
+    oled_set_pos(x, y + 1);
+    for (uint8_t i = 0; i < 8; ++i)
+        oled_write_dat(FONT_8X16[c * 16 + i + 8]);
+#endif
 }
 
 void oled_disp_string(uint8_t x, uint8_t y, const char *str)
@@ -156,14 +153,23 @@ void oled_disp_string(uint8_t x, uint8_t y, const char *str)
     while (*str)
     {
         oled_disp_char(x, y, *str++);
+#if FONT_TYPE == 0
+        x += 6;
+#elif FONT_TYPE == 1
         x += 8;
-        if (x > 120) { x = 0; y += 2; }
+#endif
+        if (x > OLED_WIDTH - 8) { x = 0; y += 2; }
     }
 }
 
 void oled_disp_chinese(uint8_t x, uint8_t y, uint8_t num)
 {
-
+    oled_set_pos(x, y);
+    for (uint8_t i = 0; i < 16; i++)
+        oled_write_dat(FONT_CHINESE[num * 2][i]);
+    oled_set_pos(x, y + 1);
+    for (uint8_t i = 0; i < 16; i++)
+        oled_write_dat(FONT_CHINESE[num * 2 + 1][i]);
 }
 
 void oled_draw_image(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t img[])
@@ -172,12 +178,12 @@ void oled_draw_image(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t img
     unsigned char x, y;
     if (y2 % 8 == 0) y = y2 / 8;
     else y = y2 / 8 + 1;
-    for(y = y1; y < y2; y++)
+    for (y = y1; y < y2; y++)
     {
         oled_set_pos(x1, y1);
-        for(x = x1; x < x2; x++)
+        for (x = x1; x < x2; x++)
         {
-            // oled_write_dat(BMP[j++]);
+            oled_write_dat(img[j++]);
         }
     }
 }

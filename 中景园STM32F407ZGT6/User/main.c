@@ -13,6 +13,35 @@
 #define SEND PDout(5)
 #define RECEIVE PDin(6)
 
+#define VREF 3.23 // ADC参考电压 典型值3.30V
+
+uint16_t adc_get(uint8_t channel)   
+{
+    ADC_RegularChannelConfig(ADC1, channel, 1, ADC_SampleTime_480Cycles);		    
+    ADC_SoftwareStartConv(ADC1);
+    while (!ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC));
+    return ADC_GetConversionValue(ADC1);
+}
+
+uint16_t adc_get_average(uint8_t channel, uint8_t times)
+{
+    uint32_t temp = 0;
+    for (uint8_t i = 0; i < times; i++)
+    {
+        temp += adc_get(channel);
+        delay_ms(5);
+    }
+    return temp / times;
+}
+
+float get_temperature(void)
+{
+    uint16_t adc_value = adc_get_average(ADC_Channel_TempSensor, 10);
+    double vsense = (double) adc_value * VREF / 4095;
+    // printf("%d %.2lf\r\n", adc_value, vsense);
+    return (vsense - 0.76) / 0.0025 + 25;
+}
+
 uint8_t key_scan(void)
 {
     int temp = 0;
@@ -38,6 +67,31 @@ void gpio_init(void)
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
     GPIO_Init(GPIOD, &GPIO_InitStructure);
+}
+
+void adc_init(void)
+{
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
+    
+    ADC_DeInit();
+    ADC_CommonInitTypeDef ADC_CommonInitStructure;
+    ADC_CommonInitStructure.ADC_Mode = ADC_Mode_Independent;
+    ADC_CommonInitStructure.ADC_TwoSamplingDelay = ADC_TwoSamplingDelay_5Cycles;
+    ADC_CommonInitStructure.ADC_DMAAccessMode = ADC_DMAAccessMode_Disabled;
+    ADC_CommonInitStructure.ADC_Prescaler = ADC_Prescaler_Div4;
+    ADC_CommonInit(&ADC_CommonInitStructure);
+    ADC_InitTypeDef ADC_InitStructure;
+    ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
+    ADC_InitStructure.ADC_ScanConvMode = DISABLE;
+    ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;
+    ADC_InitStructure.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None;
+    ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_CC1;
+    ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
+    ADC_InitStructure.ADC_NbrOfConversion = 1;
+    ADC_Init(ADC1, &ADC_InitStructure);
+    
+    ADC_TempSensorVrefintCmd(ENABLE);
+    ADC_Cmd(ADC1, ENABLE);
 }
 
 void led_init(void)
@@ -146,7 +200,9 @@ void pwm_init(void)
 }
 
 uint8_t lastkey = 0;
+uint16_t temp_timer = 0;
 uint8_t brightness = 7;
+uint8_t tick = 0;
 int8_t bit = -1;
 char tosend = 'A';
 char send = '\0';
@@ -156,6 +212,8 @@ int main(void)
 {
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
     delay_init();
+    gpio_init();
+    adc_init();
     led_init();
     key_init();
     oled_init();
@@ -164,11 +222,26 @@ int main(void)
     pwm_init();
     
     uart_println("Hello, I'm STM32F407ZGT6!");
-    oled_disp_string(16, 0, "Hello World!");
+    // oled_disp_string(16, 0, "Hello World!");
+    oled_disp_chinese(16, 0, 4);
+    oled_disp_chinese(32, 0, 5);
+    oled_disp_chinese(48, 0, 8);
+    oled_disp_chinese(64, 0, 6);
+    oled_disp_chinese(80, 0, 7);
     oled_disp_string(20, 6, "Author: WC");
     
     while (1)
     {
+        if (++temp_timer == 10000)
+        {
+            temp_timer = 0;
+            float temperature = get_temperature();
+            char str[20];
+            sprintf(str, "Temp: %.1f C", temperature);
+            oled_disp_string(16, 0, str);
+            oled_disp_char(16 + 8 * 10, 0, 128);
+            printf("T%.2f\r\n", temperature);
+        }
         char str_temp[8];
         sprintf(str_temp, "led: %02d", brightness);
         oled_disp_string(66, 2, str_temp);
@@ -176,7 +249,7 @@ int main(void)
         if (lastkey != temp)
         {
             lastkey = temp;
-            printf("Update key state: %d\n", lastkey);
+            printf("Update key state: %d\r\n", lastkey);
             char str[8];
             sprintf(str, "Key: %d", lastkey);
             oled_disp_string(8, 2, str);
@@ -187,8 +260,6 @@ int main(void)
             sprintf(str, "Received: %c", receive);
             oled_disp_string(18, 4, str);
         }
-        // if (lastkey) GPIO_ResetBits(GPIOF, GPIO_Pin_10);
-        // else GPIO_SetBits(GPIOF, GPIO_Pin_10);
         if (USART_RX_STA & 0x8000)
         {
             uint8_t len = USART_RX_STA & 0x3fff;
@@ -196,7 +267,7 @@ int main(void)
             uart_println((char*) USART_RX_BUF);
             if (len > 1 && USART_RX_BUF[0] == '#')
             {
-                LED1 = USART_RX_BUF[1] == '0' ? 1 : 0;
+                // TODO RTC实验中设置时间
             }
             USART_RX_STA = 0;
         }
@@ -207,10 +278,10 @@ void TIM3_IRQHandler(void)
 {
     if (TIM_GetITStatus(TIM3, TIM_IT_Update) == SET)
     {
-        // LED0 = !LED0;
-        // if (tick < brightness) LED1 = 0;
-        // else LED1 = 1;
-        // if (++tick > 15) tick = 0;
+        if (tick < brightness) LED1 = 0;
+        else LED1 = 1;
+        if (++tick > 15) tick = 0;
+        
         if (bit >= 0)
         {
             SEND = send & 0x01;

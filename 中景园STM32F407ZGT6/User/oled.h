@@ -4,7 +4,6 @@
 
 #define OLED_WIDTH 128
 #define OLED_HEIGHT 64
-#define SIZE 16
 
 // OLED模式设置
 // 0: 串行模式(4线spi)
