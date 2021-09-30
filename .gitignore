@@ -5,6 +5,9 @@
 */Listings
 */*/Objects
 */*/Listings
+OBJ
+DebugConfig
+RTE
 *.uvgui.*
 .mxproject
 __Previews
