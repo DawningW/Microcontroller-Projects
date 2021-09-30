@@ -6,6 +6,12 @@
 */*/Objects
 */*/Listings
 *.uvgui.*
+.mxproject
+__Previews
+History
+Project Logs for *
+Project Outputs for *
+*.PrjPcbStructure
 
 # sourcecode
 !*.uvmpw
