@@ -46,6 +46,7 @@ const  CPU_CHAR  *os_cpu_c__c = "$Id: $";
 */
 
 #include  "../../../Source/os.h"
+#include  <stm32f4xx.h>
 
 
 #ifdef __cplusplus
@@ -461,6 +462,24 @@ CPU_STK  *OSTaskStkInit (OS_TASK_PTR    p_task,
     *(--p_stk) = (CPU_STK)p_arg;                                /* R0 : argument                                        */
     *(--p_stk) = (CPU_STK)0xFFFFFFFDuL;                         /* R14: EXEC_RETURN; See Note 5                         */
                                                                 /* Remaining registers saved on process stack           */
+#if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
+    *(--p_stk) = (CPU_STK)0x31313131u;                          /* S31                                                  */
+    *(--p_stk) = (CPU_STK)0x30303030u;                          /* S30                                                  */
+    *(--p_stk) = (CPU_STK)0x29292929u;                          /* S29                                                  */
+    *(--p_stk) = (CPU_STK)0x28282828u;                          /* S28                                                  */
+    *(--p_stk) = (CPU_STK)0x27272727u;                          /* S27                                                  */
+    *(--p_stk) = (CPU_STK)0x26262626u;                          /* S26                                                  */
+    *(--p_stk) = (CPU_STK)0x25252525u;                          /* S25                                                  */
+    *(--p_stk) = (CPU_STK)0x24242424u;                          /* S24                                                  */
+    *(--p_stk) = (CPU_STK)0x23232323u;                          /* S23                                                  */
+    *(--p_stk) = (CPU_STK)0x22222222u;                          /* S22                                                  */
+    *(--p_stk) = (CPU_STK)0x21212121u;                          /* S21                                                  */
+    *(--p_stk) = (CPU_STK)0x20202020u;                          /* S20                                                  */
+    *(--p_stk) = (CPU_STK)0x19191919u;                          /* S19                                                  */
+    *(--p_stk) = (CPU_STK)0x18181818u;                          /* S18                                                  */
+    *(--p_stk) = (CPU_STK)0x17171717u;                          /* S17                                                  */
+    *(--p_stk) = (CPU_STK)0x16161616u;                          /* S16                                                  */
+#endif
     *(--p_stk) = (CPU_STK)0x11111111uL;                         /* R11                                                  */
     *(--p_stk) = (CPU_STK)0x10101010uL;                         /* R10                                                  */
     *(--p_stk) = (CPU_STK)0x09090909uL;                         /* R9                                                   */

@@ -33,8 +33,9 @@
 *********************************************************************************************************
 */
 
-#define    BSP_CPU_MODULE
-#include  <cpu_core.h>
+#define  BSP_CPU_MODULE
+#include <cpu_core.h>
+#include <bsp.h>
 
 
 /*
@@ -74,6 +75,27 @@
 
 /*
 *********************************************************************************************************
+*                                             REGISTERS
+*********************************************************************************************************
+*/
+
+#define  BSP_CPU_REG_DEM_CR                           (*(CPU_REG32 *)0xE000EDFC)
+#define  BSP_CPU_REG_DWT_CR                           (*(CPU_REG32 *)0xE0001000)
+#define  BSP_CPU_REG_DWT_CYCCNT                       (*(CPU_REG32 *)0xE0001004)
+
+
+/*
+*********************************************************************************************************
+*                                            REGISTER BITS
+*********************************************************************************************************
+*/
+
+
+#define  BSP_CPU_BIT_DEM_CR_TRCENA                    DEF_BIT_24
+#define  BSP_CPU_BIT_DWT_CR_CYCCNTENA                 DEF_BIT_00
+
+/*
+*********************************************************************************************************
 *                                      LOCAL FUNCTION PROTOTYPES
 *********************************************************************************************************
 */
@@ -84,6 +106,31 @@
 *                                     LOCAL CONFIGURATION ERRORS
 *********************************************************************************************************
 */
+
+/*
+*********************************************************************************************************
+*                                            BSP_CPU_ClkFreq()
+*
+* Description : Read CPU registers to determine the CPU clock frequency of the chip.
+*
+* Argument(s) : none.
+*
+* Return(s)   : The CPU clock frequency, in Hz.
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : none.
+*********************************************************************************************************
+*/
+
+CPU_INT32U  BSP_CPU_ClkFreq (void)
+{
+    RCC_ClocksTypeDef rcc_clocks;
+    
+    RCC_GetClocksFreq(&rcc_clocks);
+    
+    return ((CPU_INT32U)rcc_clocks.HCLK_Frequency);
+}
 
 
 /*
@@ -136,9 +183,15 @@
 #if (CPU_CFG_TS_TMR_EN == DEF_ENABLED)
 void  CPU_TS_TmrInit (void)
 {
+    CPU_INT32U  fclk_freq;
 
-    /* $$$$ Insert code to configure & start CPU timestamp timer (see Note #2). */
-
+    fclk_freq = BSP_CPU_ClkFreq();
+    
+    BSP_CPU_REG_DEM_CR     |= (CPU_INT32U)BSP_CPU_BIT_DEM_CR_TRCENA;    /* Enable Cortex-M4's DWT CYCCNT reg.                   */
+    BSP_CPU_REG_DWT_CYCCNT  = (CPU_INT32U)0u;
+    BSP_CPU_REG_DWT_CR     |= (CPU_INT32U)BSP_CPU_BIT_DWT_CR_CYCCNTENA;
+    
+    CPU_TS_TmrFreqSet((CPU_TS_TMR_FREQ)fclk_freq);
 }
 #endif
 
@@ -221,8 +274,7 @@ CPU_TS_TMR  CPU_TS_TmrRd (void)
 {
     CPU_TS_TMR  ts_tmr_cnts;
 
-
-    ts_tmr_cnts = 0u; /* $$$$ Insert code to return CPU timestamp timer value (see Note #2) */
+    ts_tmr_cnts = (CPU_TS_TMR)BSP_CPU_REG_DWT_CYCCNT;
 
     return (ts_tmr_cnts);
 }
@@ -282,10 +334,13 @@ CPU_TS_TMR  CPU_TS_TmrRd (void)
 #if (CPU_CFG_TS_32_EN == DEF_ENABLED)
 CPU_INT64U  CPU_TS32_to_uSec (CPU_TS32  ts_cnts)
 {
+    CPU_INT64U  ts_us;
+    CPU_INT64U  fclk_freq;
 
-    /* $$$$ Insert code to convert (up to) 64-bits of 32-bit CPU timestamp to microseconds (see Note #2) */
+    fclk_freq = BSP_CPU_ClkFreq();
+    ts_us     = ts_cnts / (fclk_freq / DEF_TIME_NBR_uS_PER_SEC);
 
-    return (0u);
+    return (ts_us);
 }
 #endif
 
@@ -293,9 +348,12 @@ CPU_INT64U  CPU_TS32_to_uSec (CPU_TS32  ts_cnts)
 #if (CPU_CFG_TS_64_EN == DEF_ENABLED)
 CPU_INT64U  CPU_TS64_to_uSec (CPU_TS64  ts_cnts)
 {
+    CPU_INT64U  ts_us;
+    CPU_INT64U  fclk_freq;
 
-    /* $$$$ Insert code to convert (up to) 64-bits of 64-bit CPU timestamp to microseconds (see Note #2) */
+    fclk_freq = BSP_CPU_ClkFreq();
+    ts_us     = ts_cnts / (fclk_freq / DEF_TIME_NBR_uS_PER_SEC);
 
-    return (0u);
+    return (ts_us);
 }
 #endif

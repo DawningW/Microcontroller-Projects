@@ -29,6 +29,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_it.h"
+#include <os_cpu.h>
+#include <os.h>
 
 /** @addtogroup Template_Project
   * @{
@@ -131,6 +133,7 @@ void DebugMon_Handler(void)
   */
 void PendSV_Handler(void)
 {
+    OS_CPU_PendSVHandler();
 }
 
 /**
@@ -140,6 +143,10 @@ void PendSV_Handler(void)
   */
 void SysTick_Handler(void)
 {
+    if (OSRunning == OS_STATE_OS_RUNNING)
+    {
+        OS_CPU_SysTickHandler();
+    }
 }
 
 /******************************************************************************/

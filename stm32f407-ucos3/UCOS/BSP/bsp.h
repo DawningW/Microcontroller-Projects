@@ -308,7 +308,11 @@ void        BSP_IntDisAll                     (void);
 
 CPU_INT32U  BSP_CPU_ClkFreq                   (void);
 
-void        BSP_Tick_Init                     (void);
+void        BSP_OS_TickInit   (void);
+
+void        BSP_OS_TickEnable (void);
+
+void        BSP_OS_TickDisable(void);
 
 /*
 *********************************************************************************************************

@@ -54,7 +54,7 @@
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
           <DebugInformation>1</DebugInformation>
-          <BrowseInformation>0</BrowseInformation>
+          <BrowseInformation>1</BrowseInformation>
           <ListingPath>..\OBJ\</ListingPath>
           <HexFormatSelection>0</HexFormatSelection>
           <Merge32K>0</Merge32K>
@@ -183,7 +183,7 @@
             <hadIRAM>1</hadIRAM>
             <hadXRAM>0</hadXRAM>
             <uocXRam>0</uocXRam>
-            <RvdsVP>2</RvdsVP>
+            <RvdsVP>1</RvdsVP>
             <RvdsMve>0</RvdsMve>
             <RvdsCdeCp>0</RvdsCdeCp>
             <hadIRAM2>1</hadIRAM2>
@@ -337,7 +337,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>USE_STDPERIPH_DRIVER,STM32F40_41xxx</Define>
+              <Define>USE_STDPERIPH_DRIVER,STM32F40_41xxx,__TARGET_FPU_SOFTVFP</Define>
               <Undefine></Undefine>
               <IncludePath>..\CMSIS;..\FWLIB\inc;..\UCOS\LIB;..\UCOS\CPU;..\UCOS\CPU\ARM-Cortex-M\ARMv7-M\ARM;..\UCOS\OS3\Source;..\UCOS\OS3\Ports\ARM-Cortex-M\ARMv7-M\ARM;..\UCOS\BSP;..\USER</IncludePath>
             </VariousControls>
@@ -769,14 +769,9 @@
               <FilePath>..\UCOS\BSP\bsp_os_dt.c</FilePath>
             </File>
             <File>
-              <FileName>bsp_int.c</FileName>
+              <FileName>bsp_cpu.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\UCOS\BSP\bsp_int.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_periph.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\UCOS\BSP\bsp_periph.c</FilePath>
+              <FilePath>..\UCOS\BSP\bsp_cpu.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -802,6 +797,11 @@
               <FileName>app.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\app.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\usart.c</FilePath>
             </File>
           </Files>
         </Group>

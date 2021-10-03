@@ -32,6 +32,7 @@
 
 #include  <cpu_core.h>
 #include  <os.h>
+#include  <bsp.h>
 
 
 /*
@@ -41,7 +42,7 @@
 */
 
 #if (OS_CFG_DYN_TICK_EN == DEF_ENABLED)
-#define  TIMER_COUNT_HZ             ($$$$)                      /* Frequency of the Dynamic Tick Timer.                 */
+#define  TIMER_COUNT_HZ             (10000u)                    /* Frequency of the Dynamic Tick Timer.                 */
 #define  TIMER_TO_OSTICK(count)     (((CPU_INT64U)(count)  * OS_CFG_TICK_RATE_HZ) /      TIMER_COUNT_HZ)
 #define  OSTICK_TO_TIMER(ostick)    (((CPU_INT64U)(ostick) * TIMER_COUNT_HZ)      / OS_CFG_TICK_RATE_HZ)
 
@@ -99,6 +100,7 @@ static  void  BSP_DynTick_ISRHandler(void);
 
 void  BSP_OS_TickInit (void)
 {
+#if (OS_CFG_DYN_TICK_EN == DEF_ENABLED)
     /* $$$$ */                                                  /* Stop the Dynamic Tick Timer if running.              */
 
     /* $$$$ */                                                  /* Configure the timer.                                 */
@@ -109,6 +111,18 @@ void  BSP_OS_TickInit (void)
 
     /* $$$$ */                                                  /* Install BSP_DynTick_ISRHandler as the int. handler.  */
     /* $$$$ */                                                  /* Start the timer.                                     */
+#else
+    CPU_INT32U  cpu_clk_freq;
+    
+    cpu_clk_freq = BSP_CPU_ClkFreq();                           /* Determine SysTick reference freq.                    */
+    OS_CPU_SysTickInitFreq(cpu_clk_freq);                       /* Init uC/OS periodic time src (SysTick).              */
+    /*
+ 	SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK_Div8); 
+	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
+	SysTick->LOAD = SystemCoreClock / 8 / OSCfg_TickRate_Hz;
+	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
+    */
+#endif
 }
 
 
@@ -128,8 +142,13 @@ void  BSP_OS_TickInit (void)
 
 void  BSP_OS_TickEnable (void)
 {
+#if (OS_CFG_DYN_TICK_EN == DEF_ENABLED)
     /* $$$$ */                                                  /* Enable Timer interrupt.                              */
     /* $$$$ */                                                  /* Start the Timer count generation.                    */
+#else
+    CPU_REG_SYST_CSR |= (CPU_REG_SYST_CSR_TICKINT |             /* Enables SysTick exception request                    */
+                         CPU_REG_SYST_CSR_ENABLE);              /* Enables SysTick counter                              */
+#endif
 }
 
 
@@ -149,8 +168,13 @@ void  BSP_OS_TickEnable (void)
 
 void  BSP_OS_TickDisable (void)
 {
+#if (OS_CFG_DYN_TICK_EN == DEF_ENABLED)
     /* $$$$ */                                                  /* Stop the Timer count generation.                     */
     /* $$$$ */                                                  /* Disable Timer interrupt.                             */
+#else
+    CPU_REG_SYST_CSR &= ~(CPU_REG_SYST_CSR_TICKINT |            /* Disables SysTick exception request                   */
+                          CPU_REG_SYST_CSR_ENABLE);             /* Disables SysTick counter                             */
+#endif
 }
 
 
