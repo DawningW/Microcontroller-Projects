@@ -1,7 +1,6 @@
 #include "usart.h"	
 
 // 加入以下代码, 支持printf函数, 而不需要选择use MicroLIB
-#if 1
 #pragma import(__use_no_semihosting)
 // 标准库需要的支持函数
 struct __FILE
@@ -20,7 +19,6 @@ int fputc(int ch, FILE *f)
     uart_send((uint8_t) ch);
     return ch;
 }
-#endif
 
 uint8_t USART_RX_BUF[USART_BUF_LEN + 1];
 // 接收状态标记

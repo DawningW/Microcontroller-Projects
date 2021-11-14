@@ -263,6 +263,12 @@ def receive():
                 humidity = float(data[1:])
                 if dataText is not None:
                     dataText.setText("Temperature: %.1f°C     Humidity: %.1f%%" % (temperature, humidity))
+            elif data[0] == 'M':
+                print("Compass: " + data[1:])
+            elif data[0] == 'C':
+                print("Acceleration: " + data[1:])
+            elif data[0] == 'G':
+                print("Gyroscope: " + data[1:])
             else:
                 print("Log info:", data)
         except SerialException as error:

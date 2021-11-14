@@ -128,11 +128,14 @@ int main(void)
     short x, y, z;
     hmc5883_get_data(&x, &y, &z, NULL);
     // printf("comp: %d %d %d, angle: %f\r\n", x, y, z, 0.0f);
+    printf("M%d %d %d\r\n", x, y, z);
     // 获取加速度计和陀螺仪数据
     float accel[3], gyro[3];
     mpu_get_data(accel, gyro);
     // printf("accel: %.2f %.2f %.2f\r\n", accel[0], accel[1], accel[2]);
+    printf("C%.2f %.2f %.2f\r\n", accel[0], accel[1], accel[2]);
     // printf("gyro: %.2f %.2f %.2f\r\n", gyro[0], gyro[1], gyro[2]);
+    printf("G%.2f %.2f %.2f\r\n", gyro[0], gyro[1], gyro[2]);
     
     // 计算欧拉角
     float pitch, roll, yaw;
