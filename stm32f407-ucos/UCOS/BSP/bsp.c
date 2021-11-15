@@ -101,6 +101,7 @@
 */
 
 static  void  BSP_LED_Init  (void);
+static  void  BSP_Key_Init  (void);
 
 
 /*
@@ -131,6 +132,7 @@ static  void  BSP_LED_Init  (void);
 void  BSP_Init (void)
 {
     BSP_LED_Init();                                             /* Initialize user LEDs                                 */
+    BSP_Key_Init();
 
 #ifdef TRACE_EN                                                 /* See project / compiler preprocessor options.         */
     BSP_CPU_REG_DBGMCU_CR |=  BSP_DBGMCU_CR_TRACE_IOEN_MASK;    /* Enable tracing (see Note #2).                        */
@@ -324,5 +326,48 @@ void  BSP_LED_Toggle (CPU_INT08U  led)
         default:
              break;
     }
+}
+
+static void  BSP_Key_Init (void)
+{
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOE, ENABLE);
+    
+    GPIO_InitTypeDef GPIO_InitStructure;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+    GPIO_Init(GPIOE, &GPIO_InitStructure);
+    /*
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource0);
+    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE, EXTI_PinSource3);
+    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE, EXTI_PinSource4);
+    
+    EXTI_InitTypeDef EXTI_InitStructure;
+    EXTI_InitStructure.EXTI_Line = EXTI_Line0;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
+    EXTI_InitStructure.EXTI_Line = EXTI_Line3 | EXTI_Line4;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+    EXTI_Init(&EXTI_InitStructure);
+    
+    NVIC_InitTypeDef NVIC_InitStructure;
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x02;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI3_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x03;
+    NVIC_Init(&NVIC_InitStructure);
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI4_IRQn;
+    NVIC_Init(&NVIC_InitStructure);
+    */
 }
 

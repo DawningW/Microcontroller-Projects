@@ -11,6 +11,8 @@
 #define TASK_LED0_STK_SIZE 128u
 #define TASK_LED1_PRIO 6u
 #define TASK_LED1_STK_SIZE 128u
+#define TASK_KEY_PRIO 10u
+#define TASK_KEY_STK_SIZE 256u
 
 static OS_TCB TaskStartTCB;
 static CPU_STK TaskStartStk[TASK_START_STK_SIZE];
@@ -20,21 +22,31 @@ static OS_TCB TaskLED0TCB;
 static CPU_STK TaskLED0Stk[TASK_LED0_STK_SIZE];
 static OS_TCB TaskLED1TCB;
 static CPU_STK TaskLED1Stk[TASK_LED1_STK_SIZE];
+static OS_TCB TaskKeyTCB;
+static CPU_STK TaskKeyStk[TASK_KEY_STK_SIZE];
 
 static void TaskStart(void *arg);
 static void TaskFloatCalc(void *arg);
 static void TaskLED0(void *arg);
 static void TaskLED1(void *arg);
+static void TaskKey(void *arg);
 
-void printTaskStat(OS_TCB *tcb)
+void printTaskStats()
 {
-    OS_ERR err;
-    CPU_STK_SIZE free;
-    CPU_STK_SIZE used;
-    OSTaskStkChk(tcb, &free, &used, &err);
-    HANDLE_ERROR(err);
-    printf("%2d\t%3d\t%3d\t%02d%%\t%s\r\n", tcb->Prio, used, free,
-        (used * 100) / (used + free), tcb->NamePtr);
+    CPU_SR_ALLOC();
+    CPU_CRITICAL_ENTER();
+    OS_TCB *tcb = OSTaskDbgListPtr;
+    printf("==================================================\r\n");
+    printf("CPU Usage: %.2f%%\r\n", (float) OSStatTaskCPUUsage / 100);
+    printf("Prio\tCPU\tUsed\tFree\tPer\tTaskName\r\n");
+    while (tcb != NULL)
+    {
+        printf("%2d\t%.2f%%\t%3d\t%3d\t%02d%%\t%s\r\n", tcb->Prio, (float) tcb->CPUUsageMax / 100,
+            tcb->StkUsed, tcb->StkFree, tcb->StkUsed * 100 / tcb->StkSize, tcb->NamePtr);
+        tcb = tcb->DbgNextPtr;
+    }
+    printf("==================================================\r\n");
+    CPU_CRITICAL_EXIT();
 }
 
 int main(void)
@@ -69,7 +81,6 @@ int main(void)
 static void TaskStart(void *arg)
 {
     OS_ERR err;
-    CPU_SR_ALLOC();
     
     printf("Initializing Board Support Package\r\n");
     BSP_Init();
@@ -91,7 +102,7 @@ static void TaskStart(void *arg)
 
     printf("Creating Application Tasks\r\n");
     OSTaskCreate((OS_TCB      *) &TaskFloatCalcTCB,
-                 (CPU_CHAR    *) "Task Float calc",
+                 (CPU_CHAR    *) "Task Float Calc",
                  (OS_TASK_PTR  ) TaskFloatCalc, 
                  (void        *) 0,
                  (OS_PRIO      ) TASK_FLOAT_CALC_PRIO,
@@ -132,23 +143,24 @@ static void TaskStart(void *arg)
                  (OS_OPT       ) (OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
                  (OS_ERR      *) &err);
     HANDLE_ERROR(err);
+    OSTaskCreate((OS_TCB      *) &TaskKeyTCB,
+                 (CPU_CHAR    *) "Task Key",
+                 (OS_TASK_PTR  ) TaskKey,
+                 (void        *) 0u,
+                 (OS_PRIO      ) TASK_KEY_PRIO,
+                 (CPU_STK     *) TaskKeyStk,
+                 (CPU_STK_SIZE ) TaskKeyStk[TASK_KEY_STK_SIZE / 10u],
+                 (CPU_STK_SIZE ) TASK_KEY_STK_SIZE,
+                 (OS_MSG_QTY   ) 0u,
+                 (OS_TICK      ) 0u,
+                 (void        *) 0u,
+                 (OS_OPT       ) (OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
+                 (OS_ERR      *) &err);
+    HANDLE_ERROR(err);
     
     while (DEF_TRUE)
     {
-        // OSTaskSuspend(&TaskStartTCB, &err);
-        OSTimeDly(3000u, OS_OPT_TIME_DLY, &err);
-        HANDLE_ERROR(err);
-        CPU_CRITICAL_ENTER();
-        printf("CPU Usage: %.2f%%\r\n", (float) OSStatTaskCPUUsage / 100);
-        printf("Prio\tUsed\tFree\tPer\tTaskName\r\n");
-        printTaskStat(&TaskStartTCB);
-        printTaskStat(&TaskFloatCalcTCB);
-        printTaskStat(&TaskLED0TCB);
-        printTaskStat(&TaskLED1TCB);
-        printTaskStat(&OSTmrTaskTCB);
-        printTaskStat(&OSStatTaskTCB);
-        printTaskStat(&OSIdleTaskTCB);
-        CPU_CRITICAL_EXIT();
+        OSTaskSuspend(&TaskStartTCB, &err);
     }
 }
 
@@ -189,6 +201,34 @@ static void TaskLED1(void *arg)
     {
         BSP_LED_Toggle(2u);
         OSTimeDly(1000u, OS_OPT_TIME_DLY, &err);
+        HANDLE_ERROR(err);
+    }
+}
+
+static void TaskKey(void *arg)
+{
+    OS_ERR err;
+    uint8_t lastkey = 0;
+    
+    while (DEF_TRUE)
+    {
+        uint8_t key = 0;
+        if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0))
+        {
+            OSTimeDly(20u, OS_OPT_TIME_DLY, &err);
+            key = GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0);
+        }
+        if (lastkey != key)
+        {
+            lastkey = key;
+            switch (key)
+            {
+                default:
+                case 0: break;
+                case 1: printTaskStats(); break;
+            }
+        }
+        OSTimeDly(10u, OS_OPT_TIME_DLY, &err);
         HANDLE_ERROR(err);
     }
 }
