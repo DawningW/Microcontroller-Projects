@@ -202,18 +202,18 @@ void  BSP_LED_Off (CPU_INT08U  led)
 {
     switch (led) {
         case 0u:
-             GPIO_SetBits(GPIOA, BSP_GPIOF_LED1);
-             GPIO_SetBits(GPIOG, BSP_GPIOF_LED2);
+             GPIO_SetBits(GPIOF, BSP_GPIOF_LED1);
+             GPIO_SetBits(GPIOF, BSP_GPIOF_LED2);
              break;
 
 
         case 1u:
-             GPIO_SetBits(GPIOA, BSP_GPIOF_LED1);
+             GPIO_SetBits(GPIOF, BSP_GPIOF_LED1);
              break;
 
 
         case 2u:
-             GPIO_SetBits(GPIOG, BSP_GPIOF_LED2);
+             GPIO_SetBits(GPIOF, BSP_GPIOF_LED2);
              break;
 
 
@@ -247,18 +247,18 @@ void  BSP_LED_On (CPU_INT08U led)
 {
     switch (led) {
         case 0u:
-             GPIO_ResetBits(GPIOA, BSP_GPIOF_LED1);
-             GPIO_ResetBits(GPIOG, BSP_GPIOF_LED2);
+             GPIO_ResetBits(GPIOF, BSP_GPIOF_LED1);
+             GPIO_ResetBits(GPIOF, BSP_GPIOF_LED2);
              break;
 
 
         case 1u:
-             GPIO_ResetBits(GPIOA, BSP_GPIOF_LED1);
+             GPIO_ResetBits(GPIOF, BSP_GPIOF_LED1);
              break;
 
 
         case 2u:
-             GPIO_ResetBits(GPIOG, BSP_GPIOF_LED2);
+             GPIO_ResetBits(GPIOF, BSP_GPIOF_LED2);
              break;
 
 

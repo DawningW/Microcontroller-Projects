@@ -7,7 +7,8 @@
 
 // OLED模式设置
 // 0: 串行模式(4线spi)
-// 1: 并行模式(8080)
+// 1: 串行模式(i2c)
+// 2: 并行模式(8080)
 #define OLED_MODE 0
 // CS 片选(低电平有效)
 #define OLED_CS_Clr()  GPIO_ResetBits(GPIOD, GPIO_Pin_1)
@@ -25,7 +26,11 @@
 // SDA/D1 数据端口
 #define OLED_SDIN_Clr() GPIO_ResetBits(GPIOD, GPIO_Pin_5)
 #define OLED_SDIN_Set() GPIO_SetBits(GPIOD, GPIO_Pin_5)
-#else
+#elif OLED_MODE == 1
+#define OLED_I2C_ADDR 0x78
+#define OLED_CMD_REG 0x00
+#define OLED_DAT_REG 0x40
+#elif OLED_MODE == 2
 // WR 写数据
 #define OLED_WR_Clr()
 #define OLED_WR_Set()
@@ -34,6 +39,8 @@
 #define OLED_RD_Set()
 // 8位双向数据端口
 #define OLED_DATA_WRITE(dat) GPIO_Write(GPIOB, dat);
+#else
+#error Select OLED mode first!
 #endif
 
 #define	OLED_CMD_CONTRAST 0x81 // 设置对比度(范围0x00~0xFF)
