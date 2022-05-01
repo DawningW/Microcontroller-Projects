@@ -1,4 +1,5 @@
 #include "1602A.h"
+#include "timer.h"
 
 void lcd_init()
 {
@@ -21,9 +22,9 @@ void lcd_init()
     delay(5);
 }
 
-byte lcd_read(bit type)
+BYTE lcd_read(bit type)
 {
-    byte content;
+    BYTE content;
     LCD_RS = type;
     LCD_RW = 1;
     LCD_E = 1;
@@ -35,23 +36,23 @@ byte lcd_read(bit type)
     return content;
 }
 
-byte lcd_read_state()
+BYTE lcd_read_state()
 {
     return lcd_read(0);
 }
 
-byte lcd_read_dat()
+BYTE lcd_read_dat()
 {
     while (lcd_busy());
     return lcd_read(1);
 }
 
-static bit lcd_busy()
+bool lcd_busy()
 {
-    return (bit) (lcd_read_state() & 0x80);
+    return (bool) (lcd_read_state() & 0x80);
 }
 
-void lcd_write(bit type, byte content)
+void lcd_write(bit type, BYTE content)
 {
     LCD_RS = type;
     LCD_RW = 0;
@@ -71,21 +72,21 @@ void lcd_write(bit type, byte content)
     LCD_E = 0;
 }
 
-void lcd_write_cmd(byte cmd)
+void lcd_write_cmd(BYTE cmd)
 {
     while (lcd_busy());
     lcd_write(0, cmd);
 }
 
-void lcd_write_dat(byte dat)
+void lcd_write_dat(BYTE dat)
 {
     while (lcd_busy());
     lcd_write(1, dat);
 }
 
-void lcd_write_cgram(byte pos, byte *arr)
+void lcd_write_cgram(BYTE pos, BYTE *arr)
 {
-    byte i;
+    BYTE i;
     pos <<= 3; // pos *= 8, 获得地址
     pos |= 0x40; // 设定CGRAM地址命令
     for (i = 0; i < 8; i++)
@@ -97,18 +98,18 @@ void lcd_write_cgram(byte pos, byte *arr)
     }
 }
 
-void lcd_set_pos(bit row, byte col)
+void lcd_set_pos(bit row, BYTE col)
 {
-        lcd_write_cmd(0x80 | (0x40 * row) | col);
+    lcd_write_cmd(0x80 | (0x40 * row) | col);
 }
 
-void lcd_disp(bit row, byte col, byte ch)
+void lcd_disp(bit row, BYTE col, char ch)
 {
     lcd_set_pos(row, col);
-    lcd_write_dat(ch);
+    lcd_write_dat((BYTE) ch);
 }
 
-void lcd_print(byte *str)
+void lcd_print(const char *str)
 {
-    while (*str) lcd_write_dat(*str++);
+    while (*str) lcd_write_dat((BYTE) *str++);
 }

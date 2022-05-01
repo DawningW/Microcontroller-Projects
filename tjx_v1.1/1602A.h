@@ -1,5 +1,5 @@
-#ifndef _LCD_h_
-#define _LCD_h_
+#ifndef __LCD_1602A_h__
+#define __LCD_1602A_h__
 
 #include "system.h"
 
@@ -8,11 +8,11 @@
 	
 // 选择引脚
 #define LCD_8BIT_DB // 是否使用8位数据线
-// 若采用四线传输方式,MCU口的高四位和LCD数据口的高四位相连,传输数据时先发送高四位,再发送低四位数据
-sfr LCD_DB = 0x80;
-sbit LCD_RS = P2^7;
-sbit LCD_RW = P2^6;
-sbit LCD_E = P2^5;
+// 若采用四线传输方式, MCU口的高四位和LCD数据口的高四位相连, 传输数据时先发送高四位, 再发送低四位数据
+#define LCD_DB P0
+#define LCD_RS P27
+#define LCD_RW P26
+#define LCD_E P25
 
 // 控制指令
 #define LCD_CMD_CLR 0x01 // 清屏
@@ -45,45 +45,45 @@ sbit LCD_E = P2^5;
 #endif
 
 // 初始化
-extern void lcd_init();
+void lcd_init();
 /* 读数据
  * 状态字读操作：输入: RS=低、RW=高、E=高, 输出:读出状态字,
  * 数据读出操作：输入: RS=高、RW=高、E=高, 输出:读出为数据,
  */
-extern byte lcd_read(bit type);
-extern byte lcd_read_state(); // 不检查忙
-extern byte lcd_read_dat();
+BYTE lcd_read(bit type);
+BYTE lcd_read_state(); // 不检查忙
+BYTE lcd_read_dat();
 /**
  * 检查LCD忙状态
- * 返回1时, 忙, 等待
- * 返回0时, 闲, 可写指令与数据
+ * 返回true时, 忙, 等待
+ * 返回false时, 闲, 可写指令与数据
  */
-extern bit lcd_busy(); // 调用lcd_read_state()
+bool lcd_busy(); // 调用lcd_read_state()
 /* 写数据
  * 指令写入操作：输入: RS=低、RW=低、E=下降沿, 输出:无,
  * 数据写入操作：输入: RS=高、RW=低、E=下降沿, 输出:无.
  */
-extern void lcd_write(bit type, byte content);
-extern void lcd_write_cmd(byte cmd);
-extern void lcd_write_dat(byte dat);
+void lcd_write(bit type, BYTE content);
+void lcd_write_cmd(BYTE cmd);
+void lcd_write_dat(BYTE dat);
 /**
  * 向CGRAM中写入自定义字符
  * 无需处理地址
  * pos 0-7 写入自定义cgram中的位置
  */ 
-extern void lcd_write_cgram(byte pos, byte *arr);
+void lcd_write_cgram(BYTE pos, BYTE *arr);
 /**
  * 设定下一个要写的字符的地址(DDRAM)
  */
-extern void lcd_set_pos(bit row, byte col);
+void lcd_set_pos(bit row, BYTE col);
 // 输出
 /**
  * 在特定位置显示字符
  */
-extern void lcd_disp(bit row, byte col, byte ch);
+void lcd_disp(bit row, BYTE col, char ch);
 /**
  * 显示字符串
  * 不要忘记字符数组末尾要有'\0'
  */
-extern void lcd_print(byte *str);
+void lcd_print(const char *str);
 #endif

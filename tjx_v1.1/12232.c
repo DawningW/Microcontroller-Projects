@@ -1,4 +1,5 @@
 #include "12232.h"
+#include "timer.h"
 
 void lcd_init()
 {
@@ -21,9 +22,9 @@ void lcd_init()
     delay(5);
 }
 
-byte lcd_read(bit type, bit side)
+BYTE lcd_read(bit type, bit side)
 {
-    byte content;
+    BYTE content;
     LCD_A0 = type;
     LCD_RW = 1;
     if (side == 0)
@@ -41,23 +42,23 @@ byte lcd_read(bit type, bit side)
     return content;
 }
 
-byte lcd_read_state(bit side)
+BYTE lcd_read_state(bit side)
 {
 	return lcd_read(0, side);
 }
 
-byte lcd_read_dat(bit side)
+BYTE lcd_read_dat(bit side)
 {
 	while (lcd_busy(side));
 	return lcd_read(1, side);
 }
 
-static bit lcd_busy(bit side)
+static bool lcd_busy(bit side)
 {
-	return (bit) (lcd_read_state(side) & 0x80);
+	return (bool) (lcd_read_state(side) & 0x80);
 }
 
-void lcd_write(bit type, bit side, byte content)
+void lcd_write(bit type, bit side, BYTE content)
 {
     LCD_A0 = type;
     LCD_RW = 0;
@@ -76,22 +77,22 @@ void lcd_write(bit type, bit side, byte content)
     }
 }
 
-void lcd_write_cmd(bit side, byte cmd)
+void lcd_write_cmd(bit side, BYTE cmd)
 {
     while (lcd_busy(side));
 	lcd_write(0, side, cmd);
 }
 
-void lcd_write_dat(bit side, byte dat)
+void lcd_write_dat(bit side, BYTE dat)
 {
 	while (lcd_busy(side));
 	lcd_write(1, side, dat);
 }
 
 // TODO 待重写
-void wrlattice(byte data1, byte data2)
+void wrlattice(BYTE data1, BYTE data2)
 {
-    byte i,j;
+    BYTE i,j;
     for (j = 0; j < 4; j++)
     {
         lcd_write_cmd_all(LCD_CMD_PAGE + j);
@@ -105,9 +106,9 @@ void wrlattice(byte data1, byte data2)
     }
 }
 
-void disp_char(byte code *eng)
+void disp_char(BYTE code *eng)
 { 
-    byte i, j, k;
+    BYTE i, j, k;
     for (k = 0; k < 7; k++)
     {
         for(j=0;j<4;j++)
@@ -132,9 +133,9 @@ void disp_char(byte code *eng)
     }
 }
 
-void disp_chinese(byte code *chn)
+void disp_chinese(BYTE code *chn)
 {
-    byte i, j, k;
+    BYTE i, j, k;
     for (k = 0; k < 3; k++)
     {
         for (j = 0; j < 4; j++)
@@ -159,9 +160,9 @@ void disp_chinese(byte code *chn)
     }
 } 
 
-void disp_pattern(byte code *img)
+void disp_pattern(BYTE code *img)
 {
-    byte i, j;
+    BYTE i, j;
     for (j = 0; j < 4; j++)
     {
         lcd_write_cmd_all(LCD_CMD_PAGE + j);

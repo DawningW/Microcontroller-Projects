@@ -1,22 +1,21 @@
 #include "keyboard.h"
+#include "timer.h"
 
-bit key_lock;
-bit key_shift;
-byte key;
+key_callback *key_pressed = NULL;
+BYTE key;
 
-void (*keyinput)(word) = NULL;
-
-void keyboard_init(void (*callback)(word))
+void key_init(key_callback *callback)
 {
-    struct InterruptItem item;
-    item.trigger = 1;
-    item.callback = keypressed;
-    interrupt_init(INT_0, item);
-    keyinput = callback;
+    EXTI_CONFIG exti;
+    
     KEY_PORT = 0x00;
+    key_pressed = callback;
+    exti.trigger = EXTI_Trigger_Falling;
+    exti_init(EXTI_0, &exti);
+    exti_cmd(EXTI_0, true);
 }
 
-byte getkey(byte x, byte y)
+static BYTE getkey(BYTE x, BYTE y)
 {
     return (y - 1) * 4 + x;
 }
@@ -25,9 +24,9 @@ byte getkey(byte x, byte y)
  * 线反转法扫描按键
  * 得到的按键码高位是列(x), 低位是行(y)
  */
-byte scankey()
+BYTE scankey()
 {
-    byte x, y;
+    BYTE x, y;
     KEY_PORT = 0xf0;
     if ((KEY_PORT & 0xf0) != 0xf0)
     {
@@ -45,16 +44,13 @@ byte scankey()
     }
     return 0;
 }
+// FIXME 当前写法不适合中断
 
-void keypressed(enum Ints i)
+void exint0() interrupt 0
 {
     if (key = scankey())
     {
-        if (key == 4)
-            key_lock = !key_lock;
-        else if (key == 13)
-            key_shift = !key_shift;
-        else if (keyinput)
-            keyinput(key);
+        if (key_pressed)
+            key_pressed(key);
     }
 }

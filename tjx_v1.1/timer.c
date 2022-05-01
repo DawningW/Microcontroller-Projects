@@ -1,83 +1,123 @@
 #include "timer.h"
 
-struct TimerItem timer0_item;
-
-void timer_init(enum Timers tm, struct TimerItem item)
+void timer_init(TIM_NUM num, TIM_CONFIG *timer)
 {
-    EA = 0;
 #ifdef MODE1T
     AUXR = 0x80; // 1T
 #endif
-    if (tm == TM_0)
+    if (num == TIM_0)
     {
-        // 初始化计数器
-        timer0_item = item;
-        timer0_item.count = timer0_item.max_time;
-        if (timer0_item.callback)
-            ET0 = 1; // 打开Timer0中断
-        // 16位定时器模式(TMOD^1 = 0, TMOD^0 = 1)
-        TMOD &= 0xFC;
-        TMOD |= 0x01;
-        // 装载Timer0
-        TL0 = T1MS; // 低字节
-        TH0 = T1MS >> 8; // 高字节
-        // 启动Timer0
-        TR0 = 1;
+        TR0 = 0;
+        WRITE_REG(TMOD, 0x03, 0, timer->mode);
+        WRITE_REG_BIT(TMOD, 2, timer->function);
+        TL0 = timer->value;
+        if (timer->mode == TIM_Mode_2)
+            TH0 = timer->period;
+        else
+            TH0 = timer->value >> 8;
+        if (timer->enable_int)
+            nvic_set_priority(1, timer->priority);
+        ET0 = timer->enable_int;
     }
-    else if (tm == TM_1)
+    else if (num == TIM_1)
     {
-        // TODO 定时器1用做串口波特率发生器, 将初始化代码移至此处
+        TR1 = 0;
+        WRITE_REG(TMOD, 0x03, 4, timer->mode);
+        WRITE_REG_BIT(TMOD, 6, timer->function);
+        TL1 = timer->value;
+        if (timer->mode == TIM_Mode_2)
+            TH1 = timer->period;
+        else
+            TH1 = timer->value >> 8;
+        if (timer->enable_int)
+            nvic_set_priority(3, timer->priority);
+        ET1 = timer->enable_int;
     }
-    else if (tm == TM_2)
+    else if (num == TIM_2)
     {
-        // TODO 计时器2
+        TR2 = 0;
+        __CLEAR_BIT(T2CON, 0x31);
+        if (timer->mode == TIM_Mode_2)
+            __SET_BIT(T2CON, 0x30);
+        else
+            CP_RL2 = timer->mode;
+        C_T2 = timer->function;
+        if (timer->mode != TIM_Mode_1)
+        {
+            RCAP2L = timer->period;
+            RCAP2H = timer->period >> 8;
+        }
+        TL2 = timer->value;
+        TH2 = timer->value >> 8;
+        if (timer->enable_int)
+            nvic_set_priority(5, timer->priority);
+        ET2 = timer->enable_int;
     }
-    EA = 1; // 打开全局中断
 }
 
-// 000BH
-void timer0() interrupt 1
+void timer_cmd(TIM_NUM tim, bool enable)
 {
-    // 重载Timer0
-    TL0 = T1MS; // 低字节
-    TH0 = T1MS >> 8; // 高字节
-    if (--timer0_item.count == 0)
+    switch (tim)
     {
-        // 重置计数器
-        timer0_item.count = timer0_item.max_time;
-        // 调用监听器
-        if (timer0_item.callback)
-            timer0_item.callback(TM_0);
+        case TIM_0: TR0 = enable; break;
+        case TIM_1: TR1 = enable; break;
+        case TIM_2: TR2 = enable; break;
+        default: break;
     }
 }
 
-/*
-// 001BH
-void timer1() interrupt 3
+bool timer_is_overflow(TIM_NUM tim)
 {
-
-}
-*/
-
-// 002BH
-void timer2() interrupt 5
-{
-
+    switch (tim)
+    {
+        case TIM_0: return (bool) TF0;
+        case TIM_1: return (bool) TF1;
+        case TIM_2: return (bool) TF2;
+        default: return false;
+    }
 }
 
-/**
- * 延时子程序
- */
-void delay(word ms)
+uint16_t timer_get_value(TIM_NUM tim)
 {
-    byte i;
+    switch (tim)
+    {
+        case TIM_0: return (TH0 << 8) | TL0;
+        case TIM_1: return (TH1 << 8) | TL1;
+        case TIM_2: return (TH2 << 8) | TL2;
+        default: return 0x0000;
+    }
+}
+
+void timer_set_value(TIM_NUM tim, uint16_t value)
+{
+    switch (tim)
+    {
+        case TIM_0:
+            TL0 = value;
+            TH0 = value >> 8;
+            break;
+        case TIM_1:
+            TL1 = value;
+            TH1 = value >> 8;
+            break;
+        case TIM_2:
+            TL2 = value;
+            TH2 = value >> 8;
+            break;
+        default: break;
+    }
+}
+
+void delay(WORD ms)
+{
+    BYTE i;
     while (ms-- != 0)
         for (i = 0; i < 91; i++);
 }
 
-void delays(word s)
+void delays(WORD s)
 {
-    byte i, j, k;
+    BYTE i, j, k;
     while (s-- != 0)
     {
         i = 8, j = 1, k = 243;

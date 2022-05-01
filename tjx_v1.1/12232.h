@@ -1,15 +1,15 @@
-#ifndef _LCD_h_
-#define _LCD_h_
+#ifndef __LCD_12232_h__
+#define __LCD_12232_h__
 
 #include "system.h"
 
 // 选择引脚
-sfr LCD_DB = 0x80;
-sbit LCD_RESET = P1^0;
-sbit LCD_E1 = P1^1;
-sbit LCD_E2 = P1^2;
-sbit LCD_RW = P1^3;
-sbit LCD_A0 = P1^4;
+#define LCD_DB P0
+#define LCD_RESET P10
+#define LCD_E1 P11
+#define LCD_E2 P12
+#define LCD_RW P13
+#define LCD_A0 P14
 
 // 控制指令
 #define LCD_CMD_RESET 0xE2 // 复位
@@ -56,14 +56,14 @@ sbit LCD_A0 = P1^4;
 #define LCD_CMD_END 0xEE
 
 // 初始化
-extern void lcd_init();
-extern byte lcd_read(bit type, bit side);
-extern byte lcd_read_state(bit side);
-extern byte lcd_read_dat(bit side);
-extern bit lcd_busy(bit side);
-extern void lcd_write(bit type, bit side, byte content);
-extern void lcd_write_cmd(bit side, byte cmd);
-#define lcd_write_cmd_all(cmd) lcd_write_cmd(0, cmd);lcd_write_cmd(1, cmd);
-extern void lcd_write_dat(bit side, byte dat);
+void lcd_init();
+BYTE lcd_read(bit type, bit side);
+BYTE lcd_read_state(bit side);
+BYTE lcd_read_dat(bit side);
+bool lcd_busy(bit side);
+void lcd_write(bit type, bit side, BYTE content);
+void lcd_write_cmd(bit side, BYTE cmd);
+#define lcd_write_cmd_all(cmd) lcd_write_cmd(0, cmd); lcd_write_cmd(1, cmd);
+void lcd_write_dat(bit side, BYTE dat);
 
 #endif

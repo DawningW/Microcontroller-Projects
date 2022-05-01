@@ -3,15 +3,10 @@
 
 #include "system.h"
 
-// TODO 按键码的定义
-
 #define KEY_PORT P1
 
-extern bit key_lock;
-extern bit key_shift;
-extern byte key;
+typedef void key_callback(BYTE);
 
-extern void keyboard_init(void (*callback)(word key));
-extern void keypressed(enum Ints);
+void key_init(key_callback *callback);
 
 #endif
