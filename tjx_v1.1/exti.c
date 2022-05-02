@@ -12,8 +12,6 @@
 
 void nvic_set_priority(uint8_t channel, NVIC_PRIORITY priority)
 {
-    bool enabled = EA;
-    nvic_disable();
     switch (channel)
     {
         case 0: WRITE_PRIORITY(PX0, 0, priority); break;
@@ -26,7 +24,6 @@ void nvic_set_priority(uint8_t channel, NVIC_PRIORITY priority)
         case 7: WRITE_PRIORITY(PX3, 7, priority); break;
         default: break;
     }
-    if (enabled) nvic_enable();
 }
 
 void exti_init(EXTI_NUM num, EXTI_CONFIG *exti)

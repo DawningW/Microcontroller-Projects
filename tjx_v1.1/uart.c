@@ -1,13 +1,12 @@
 #include "uart.h"
 #include <stdio.h>
 
-#define BUFFER_SIZE 31
+#define BUFFER_SIZE 15
 
 UART_PARITY parity;
 uart_callback *uart_received = NULL;
 char buffer[BUFFER_SIZE + 1];
 size_t length;
-bool busy;
 
 static uint16_t get_generator_count(TIM_NUM tim, uint32_t baudrate)
 {
@@ -21,13 +20,12 @@ static uint16_t get_generator_count(TIM_NUM tim, uint32_t baudrate)
 
 void uart_init(UART_CONFIG *uart)
 {
-    TIM_CONFIG tim;
+    TIM_CONFIG tm = {0};
     
     ES = 0;
     parity = uart->parity;
     uart_received = uart->callback;
     length = 0;
-    busy = false;
     SM0 = uart->parity != UART_Parity_None;
     SM1 = uart->baudrate > 0;
     REN = uart->callback != NULL;
@@ -36,9 +34,9 @@ void uart_init(UART_CONFIG *uart)
     ES = 1;
     if (!SM1 || uart->baud_generator == TIM_0)
         return;
-    tim.mode = TIM_Mode_2;
-    tim.value = tim.period = get_generator_count(uart->baud_generator, uart->baudrate);
-    timer_init(uart->baud_generator, &tim);
+    tm.mode = TIM_Mode_2;
+    tm.value = tm.period = get_generator_count(uart->baud_generator, uart->baudrate);
+    timer_init(uart->baud_generator, &tm);
     timer_cmd(uart->baud_generator, true);
 }
 
@@ -53,8 +51,8 @@ void uart0() interrupt 4
     char c;
     if (RI)
     {
-        RI = 0;
         c = SBUF;
+        RI = 0;
         if (c != '\r')
         {
             if (c == '\n' || length >= BUFFER_SIZE)
@@ -64,62 +62,45 @@ void uart0() interrupt 4
                     uart_received(buffer, length);
                 length = 0;
             }
-            buffer[length++] = c;
+            if (c != '\n')
+                buffer[length++] = c;
             // RB8为奇偶校验位
         }
     }
-    if (TI)
-    {
-        TI = 0;
-        busy = false;
-    }
 }
 
-void uart_putchar(char c)
+static void uart_send_char(char c)
 {
-    while (busy);
-    busy = true;
-    if (parity >= UART_Parity_Odd)
-    {
-        ACC = c;
-        TB8 = parity == UART_Parity_Even ? P : ~P;
-        SBUF = ACC;
-    }
-    else
-    {
-        SBUF = c;
-    }
+    // ACC = c;
+    // if (parity == UART_Parity_Even)
+    //     TB8 = P;
+    // else if (parity == UART_Parity_Odd)
+    //     TB8 = ~P;
+    // SBUF = ACC;
+    SBUF = c;
+    while (!TI);
+    TI = 0;
 }
 
-void uart_putstring(const char *str)
+void uart_send(const char *str)
 {
     while (*str)
     {
-        uart_putchar(*str++);
+        uart_send_char(*str++);
     }
 }
 
 // Implement stdio.h
 char putchar(char c)
 {
-    uart_putchar(c);
+    if (c == '\n')
+        uart_send_char('\r');
+    uart_send_char(c);
     return c;
 }
 
 // 来自Keil的实现
 /*
-char putchar(char c)
-{
-    if (c == '\n')
-    {
-        while (!TI);
-        TI = 0;
-        SBUF = 0x0d;
-    }
-    while (!TI);
-    TI = 0;
-    return (SBUF = c);
-}
 char _getkey()
 {
     char c;

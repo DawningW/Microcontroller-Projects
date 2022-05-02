@@ -4,14 +4,8 @@
 #include "system.h"
 #include "exti.h"
 
-// Timer clock mode, comment this line is 12T mode, uncomment is 1T mode
-// #define MODE1T
-
-#ifdef MODE1T
-#define T1MS (65536 - FOSC / 1000) // 1ms timer calculation method in 1T mode
-#else
-#define T1MS (65536 - FOSC / 12 / 1000) // 1ms timer calculation method in 12T mode
-#endif
+// 1ms timer calculation method in 12T mode
+#define T1MS (65536 - FOSC / 12 / 1000)
 
 // 定时器号, C51只有0和1
 typedef enum

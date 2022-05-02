@@ -12,34 +12,35 @@
 
 char code hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 char code helloworld[] = "HelloWorld! I'm 89C52RC running on TJX V1.1!     ";
-char code bell[] = {0x01, 0x1b, 0x1d, 0x19, 0x1d, 0x1b, 0x01, 0x00};
+BYTE code bell[] = {0x01, 0x1b, 0x1d, 0x19, 0x1d, 0x1b, 0x01, 0x00};
 
 WORD timer_count;
-bool key_lock;
-bool key_shift;
 BYTE pos;
 BYTE *next_char;
 
 void uart_received(char *dat, size_t length)
 {
     UNUSED(length);
-    uart_putstring(dat);
+    puts(dat);
 }
 
 void key_pressed(WORD key)
 {
-    if (key == 4)
-        key_lock = !key_lock;
-    else if (key == 13)
-        key_shift = !key_shift;
-    lcd_disp(1, 5, hex[key - 1]);
+    BYTE key_num = key_get_num(key);
+    lcd_disp(1, key_num, hex[key_num]);
+    if (key_num == 13)
+        power_reset(RST_Bootarea_AP);
+    else if (key_num == 15)
+        power_cmd(POWER_Idle);
+    else if (key_num == 16)
+        power_cmd(POWER_Down);
 }
 
-void main()
+void init()
 {
-    EXTI_CONFIG exti;
-    TIM_CONFIG tm;
-    UART_CONFIG uart;
+    EXTI_CONFIG exti = {0};
+    TIM_CONFIG tm = {0};
+    UART_CONFIG uart = {0};
 
     exti.trigger = EXTI_Trigger_Falling;
     exti_init(EXTI_1, &exti);
@@ -48,7 +49,6 @@ void main()
     timer_count = MAX_TIME;
     tm.mode = TIM_Mode_1;
     tm.enable_int = true;
-    tm.priority = NVIC_Priority_1;
     tm.value = T1MS;
     timer_init(TIM_0, &tm);
     timer_cmd(TIM_0, true);
@@ -56,16 +56,24 @@ void main()
     uart.baudrate = 9600;
     uart.baud_generator = TIM_1;
     uart.parity = UART_Parity_None;
-    uart.priority = NVIC_Priority_2;
+    uart.priority = NVIC_Priority_1;
     uart.callback = uart_received;
     uart_init(&uart);
 
     nvic_enable();
 
-    key_init(key_pressed);
+    key_init(NULL);
     lcd_init();
+}
 
-    uart_putstring("STC89C52RC\r\nUart has inited successfully!\r\n");
+void main()
+{
+    BYTE key;
+
+    init();
+    puts("STC89C52RC");
+    puts("System init successfully!");     // 末尾无需换行符
+    printf("%s is form printf\n", "This"); // 末尾需要加换行符
     for (pos = 1, next_char = helloworld; pos < MAX_DISPLAY_CHAR; pos++, next_char++)
     {
         if (*next_char == '\0') next_char = helloworld;
@@ -74,8 +82,9 @@ void main()
 
     while (true)
     {
-        P35 = ~P35;
-        delays(1);
+        if (key = key_scan())
+            key_pressed(key);
+        delay(10);
     }
 }
 

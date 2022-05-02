@@ -2,9 +2,6 @@
 
 void timer_init(TIM_NUM num, TIM_CONFIG *timer)
 {
-#ifdef MODE1T
-    AUXR = 0x80; // 1T
-#endif
     if (num == TIM_0)
     {
         TR0 = 0;
