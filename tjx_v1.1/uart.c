@@ -71,12 +71,13 @@ void uart0() interrupt 4
 
 static void uart_send_char(char c)
 {
-    // ACC = c;
-    // if (parity == UART_Parity_Even)
-    //     TB8 = P;
-    // else if (parity == UART_Parity_Odd)
-    //     TB8 = ~P;
-    // SBUF = ACC;
+    if (parity >= UART_Parity_Odd)
+    {
+        ACC = c;
+        TB8 = P;
+        if (parity == UART_Parity_Odd)
+            TB8 = ~TB8;
+    }
     SBUF = c;
     while (!TI);
     TI = 0;

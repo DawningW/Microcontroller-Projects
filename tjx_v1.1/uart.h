@@ -18,10 +18,10 @@ typedef void uart_callback(char*, size_t);
 typedef enum
 {
     UART_Parity_None = 0x0, // 无奇偶校验
-    UART_Parity_Odd,        // 奇校验
-    UART_Parity_Even,       // 偶校验
     UART_Parity_Space,      // 校验位为0
-    UART_Parity_Mark        // 校验位为1
+    UART_Parity_Mark,       // 校验位为1
+    UART_Parity_Odd,        // 奇校验
+    UART_Parity_Even        // 偶校验
 } UART_PARITY;
 
 typedef struct
