@@ -12,7 +12,7 @@ MPU6500 I2C2 (SCL F1 SDA F0)
 用到的第三方库:
 PySerial
 PIL
-glm
+PyGLM
 glfw
 PyOpenGL
 

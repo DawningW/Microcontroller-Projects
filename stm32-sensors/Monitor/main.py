@@ -196,6 +196,7 @@ class Text(object):
 def main():
     global device, receive_thread
     print("Welcome to use stm32-sensors monitor, written by WC.")
+    port = None
     while True:
         ports = list(serial.tools.list_ports.comports())
         if len(ports) == 0:
@@ -204,14 +205,21 @@ def main():
             print("Available serials:")
             for i in range(len(ports)):
                 print("{}. {}".format(i + 1, ports[i]))
+            if len(ports) == 1:
+                port = ports[0]
+                print("Auto selected {}".format(port))
+                break
             try:
                 num = int(input("Select number: "))
                 if num <= 0 or num > len(ports): continue
-                device = serial.Serial(ports[num - 1].device, 115200)
+                port = ports[num - 1]
+                print("Selected {}. {}".format(num - 1, port))
                 break
             except ValueError:
                 continue
-    print("Selected {}, start to receive data.".format(device.name))
+    baudrate = 115200
+    device = serial.Serial(port.device, baudrate)
+    print("Start to receive data from {} with baudrate {}.".format(device.name, baudrate))
     receive_thread = Thread(target = receive, daemon = True)
     receive_thread.start()
     # Initialize the library
