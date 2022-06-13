@@ -47,15 +47,15 @@ BYTE lcd_read_state(bit side)
 	return lcd_read(0, side);
 }
 
+static bool lcd_busy(bit side)
+{
+	return (bool) (lcd_read_state(side) & 0x80);
+}
+
 BYTE lcd_read_dat(bit side)
 {
 	while (lcd_busy(side));
 	return lcd_read(1, side);
-}
-
-static bool lcd_busy(bit side)
-{
-	return (bool) (lcd_read_state(side) & 0x80);
 }
 
 void lcd_write(bit type, bit side, BYTE content)

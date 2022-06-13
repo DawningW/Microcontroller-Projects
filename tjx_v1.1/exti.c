@@ -7,7 +7,7 @@
 #define WRITE_PRIORITY(low, high, priority)         \
     do {                                            \
         low = GET_BIT(priority, 0);                 \
-        WRITE_REG_BIT(IPH, high, GET_BIT(priority, 1)); \
+        MODIFY_REG_BIT(IPH, high, GET_BIT(priority, 1)); \
     } while (0)
 
 void nvic_set_priority(uint8_t channel, NVIC_PRIORITY priority)

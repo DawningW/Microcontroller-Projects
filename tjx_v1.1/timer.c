@@ -5,8 +5,8 @@ void timer_init(TIM_NUM num, TIM_CONFIG *timer)
     if (num == TIM_0)
     {
         TR0 = 0;
-        WRITE_REG(TMOD, 0x03, 0, timer->mode);
-        WRITE_REG_BIT(TMOD, 2, timer->function);
+        MODIFY_REG(TMOD, 0x03, timer->mode);
+        MODIFY_REG_BIT(TMOD, 2, timer->function);
         TL0 = timer->value;
         if (timer->mode == TIM_Mode_2)
             TH0 = timer->period;
@@ -19,8 +19,8 @@ void timer_init(TIM_NUM num, TIM_CONFIG *timer)
     else if (num == TIM_1)
     {
         TR1 = 0;
-        WRITE_REG(TMOD, 0x03, 4, timer->mode);
-        WRITE_REG_BIT(TMOD, 6, timer->function);
+        MODIFY_REG(TMOD, 0x03 << 4, timer->mode << 4);
+        MODIFY_REG_BIT(TMOD, 6, timer->function);
         TL1 = timer->value;
         if (timer->mode == TIM_Mode_2)
             TH1 = timer->period;
@@ -33,9 +33,9 @@ void timer_init(TIM_NUM num, TIM_CONFIG *timer)
     else if (num == TIM_2)
     {
         TR2 = 0;
-        __CLEAR_BIT(T2CON, 0x31);
+        CLEAR_BITS(T2CON, 0x31);
         if (timer->mode == TIM_Mode_2)
-            __SET_BIT(T2CON, 0x30);
+            SET_BITS(T2CON, 0x30);
         else
             CP_RL2 = timer->mode;
         C_T2 = timer->function;

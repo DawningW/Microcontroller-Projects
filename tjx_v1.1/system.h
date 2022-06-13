@@ -31,21 +31,23 @@ typedef unsigned char _Bool;
 #define WORD uint16_t
 #define DWORD uint32_t
 
-#define __SET_BIT(x, mask)     (x |= (mask))
-#define __CLEAR_BIT(x, mask)   (x &= ~(mask))
-#define __REVERSE_BIT(x, mask) (x ^= (mask))
-#define __GET_BIT(x, mask)     (x & (mask))
-#define __TEST_BIT(x, mask)    (!(!__GET_BIT(x, mask)))
-#define BIT_MASK(n)            (1U << ((n) % 8))
-#define SET_BIT(x, n)          __SET_BIT(x, BIT_MASK(n))
-#define CLEAR_BIT(x, n)        __CLEAR_BIT(x, BIT_MASK(n))
-#define REVERSE_BIT(x, n)      __REVERSE_BIT(x, BIT_MASK(n))
-#define GET_BIT(x, n)          __GET_BIT(x, BIT_MASK(n))
-#define TEST_BIT(x, n)         ((x & BIT_MASK(n)) >> (n))
+#define SET_BITS(x, mask)     (x |= (mask))
+#define CLEAR_BITS(x, mask)   (x &= ~(mask))
+#define REVERSE_BITS(x, mask) (x ^= (mask))
+#define GET_BITS(x, mask)     (x & (mask))
+#define TEST_BITS(x, mask)    (!(!GET_BITS(x, mask)))
 
-#define WRITE_REG(reg, mask, n, val) \
-    (reg = (reg & ~((mask) << (n))) | ((val) << (n)))
-#define WRITE_REG_BIT(reg, n, val) WRITE_REG(reg, 1U, n, val)
+#define BIT_MASK(n)           (1U << ((n) % 8))
+#define SET_BIT(x, n)         SET_BITS(x, BIT_MASK(n))
+#define CLEAR_BIT(x, n)       CLEAR_BITS(x, BIT_MASK(n))
+#define REVERSE_BIT(x, n)     REVERSE_BITS(x, BIT_MASK(n))
+#define GET_BIT(x, n)         GET_BITS(x, BIT_MASK(n))
+#define TEST_BIT(x, n)        ((x & BIT_MASK(n)) >> (n))
+
+#define MODIFY_REG(reg, clear_mask, set_mask) \
+    (reg = (reg & (~(clear_mask))) | (set_mask))
+#define MODIFY_REG_BIT(reg, n, val) \
+    MODIFY_REG(reg, BIT_MASK(n), (val) << (n))
 
 // Just make compiler happy :)
 #define UNUSED(x) ((void) (x))

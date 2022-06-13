@@ -42,7 +42,7 @@ void uart_init(UART_CONFIG *uart)
 
 void uart_multi_baudrate(bool enable)
 {
-    WRITE_REG_BIT(PCON, 7, enable);
+    MODIFY_REG_BIT(PCON, 7, enable);
 }
 
 // 0023H

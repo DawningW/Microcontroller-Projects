@@ -13,12 +13,12 @@
 
 void mem_ale(bool enable)
 {
-    WRITE_REG_BIT(AUXR, 0, enable);
+    MODIFY_REG_BIT(AUXR, 0, enable);
 }
 
 void mem_internal_exram(bool enable)
 {
-    WRITE_REG_BIT(AUXR, 1, !enable);
+    MODIFY_REG_BIT(AUXR, 1, !enable);
 }
 
 void isp_config()
@@ -28,7 +28,7 @@ void isp_config()
 
 void isp_cmd(bool enable)
 {
-    WRITE_REG_BIT(ISP_CONTR, 7, enable);
+    MODIFY_REG_BIT(ISP_CONTR, 7, enable);
 }
 
 static void isp_trigger()

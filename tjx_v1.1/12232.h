@@ -60,10 +60,10 @@ void lcd_init();
 BYTE lcd_read(bit type, bit side);
 BYTE lcd_read_state(bit side);
 BYTE lcd_read_dat(bit side);
-bool lcd_busy(bit side);
 void lcd_write(bit type, bit side, BYTE content);
 void lcd_write_cmd(bit side, BYTE cmd);
-#define lcd_write_cmd_all(cmd) lcd_write_cmd(0, cmd); lcd_write_cmd(1, cmd);
+#define lcd_write_cmd_all(cmd) \
+    do { lcd_write_cmd(0, cmd); lcd_write_cmd(1, cmd); } while (0)
 void lcd_write_dat(bit side, BYTE dat);
 
 #endif
