@@ -3,11 +3,13 @@
 
 #include "system.h"
 
-#define SPI_CS   P14
-#define SPI_SCK  P15
-#define SPI_MOSI P16
-#define SPI_MISO P17
+#define SPI_CS   P25
+#define SPI_SCK  P27
+#define SPI_MOSI P26
+#define SPI_MISO P26
 
-uint8_t sspi_send_and_read_data(uint8_t dat);
+void sspi_init();
+void sspi_send_byte(uint8_t byte);
+uint8_t sspi_read_byte();
 
 #endif
