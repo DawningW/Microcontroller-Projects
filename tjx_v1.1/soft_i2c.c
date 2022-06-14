@@ -1,7 +1,7 @@
 #include "soft_i2c.h"
 
 // 延时5us
-#define si2c_delay() do { _nop_(); _nop_(); _nop_(); _nop_(); } while(0)
+#define si2c_delay() do { _nop_(); _nop_(); _nop_(); _nop_(); } while (0)
 
 void si2c_init()
 {
