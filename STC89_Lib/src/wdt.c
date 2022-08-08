@@ -1,15 +1,6 @@
-#include "power.h"
+#include "wdt.h"
 
-void power_reset(RST_BOOTAREA area)
-{
-    MODIFY_REG_BIT(ISP_CONTR, 6, area);
-    SET_BIT(ISP_CONTR, 5);
-}
-
-void power_cmd(POWER_MODE mode)
-{
-    SET_BIT(PCON, mode);
-}
+#if COMPILE_WDT == 1
 
 void wdt_cmd(bool enable)
 {
@@ -30,3 +21,5 @@ void wdt_feed()
 {
     SET_BIT(WDT_CONTR, 4);
 }
+
+#endif // COMPILE_WDT

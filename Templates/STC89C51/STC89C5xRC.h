@@ -19,6 +19,14 @@ sbit P41 = P4^1;
 sbit P40 = P4^0;
 
 sfr  XICON = 0xc0;
+sbit PX3 = XICON^7;
+sbit EX3 = XICON^6;
+sbit IE3 = XICON^5;
+sbit IT3 = XICON^4;
+sbit PX2 = XICON^3;
+sbit EX2 = XICON^2;
+sbit IE2 = XICON^1;
+sbit IT2 = XICON^0;
 
 sfr  WDT_CONTR = 0xe1;
 

@@ -322,9 +322,9 @@
             <InterruptVectorAddress>0</InterruptVectorAddress>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define></Define>
+              <Define>STC89</Define>
               <Undefine></Undefine>
-              <IncludePath></IncludePath>
+              <IncludePath>..\STC89_Lib\template;..\STC89_Lib\inc</IncludePath>
             </VariousControls>
           </C51>
           <Ax51>
@@ -377,39 +377,69 @@
           <GroupName>LIBRARY</GroupName>
           <Files>
             <File>
-              <FileName>power.c</FileName>
+              <FileName>system.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\power.c</FilePath>
+              <FilePath>..\STC89_Lib\src\system.c</FilePath>
             </File>
             <File>
-              <FileName>isp.c</FileName>
+              <FileName>nvic.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\isp.c</FilePath>
+              <FilePath>..\STC89_Lib\src\nvic.c</FilePath>
+            </File>
+            <File>
+              <FileName>power.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STC89_Lib\src\power.c</FilePath>
+            </File>
+            <File>
+              <FileName>wdt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STC89_Lib\src\wdt.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STC89_Lib\src\gpio.c</FilePath>
             </File>
             <File>
               <FileName>exti.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\exti.c</FilePath>
+              <FilePath>..\STC89_Lib\src\exti.c</FilePath>
             </File>
             <File>
               <FileName>timer.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\timer.c</FilePath>
+              <FilePath>..\STC89_Lib\src\timer.c</FilePath>
             </File>
             <File>
               <FileName>uart.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\uart.c</FilePath>
+              <FilePath>..\STC89_Lib\src\uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>mem.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STC89_Lib\src\mem.c</FilePath>
+            </File>
+            <File>
+              <FileName>isp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STC89_Lib\src\isp.c</FilePath>
+            </File>
+            <File>
+              <FileName>soft_pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STC89_Lib\src\soft_pwm.c</FilePath>
             </File>
             <File>
               <FileName>soft_i2c.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\soft_i2c.c</FilePath>
+              <FilePath>..\STC89_Lib\src\soft_i2c.c</FilePath>
             </File>
             <File>
               <FileName>soft_spi.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\soft_spi.c</FilePath>
+              <FilePath>..\STC89_Lib\src\soft_spi.c</FilePath>
             </File>
           </Files>
         </Group>

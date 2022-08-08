@@ -1,5 +1,7 @@
 #include "isp.h"
 
+#if COMPILE_ISP == 1
+
 #define CHECK_ADDR(addr)                                  \
     do {                                                  \
         if (addr < ISP_ADDR_START || addr > ISP_ADDR_END) \
@@ -8,18 +10,8 @@
 #define SET_ADDR(low, high, addr) \
     do {                          \
         low = addr;               \
-        high = addr >> 8;       \
+        high = addr >> 8;         \
     } while (0)
-
-void mem_ale(bool enable)
-{
-    MODIFY_REG_BIT(AUXR, 0, enable);
-}
-
-void mem_internal_exram(bool enable)
-{
-    MODIFY_REG_BIT(AUXR, 1, !enable);
-}
 
 void isp_config()
 {
@@ -46,9 +38,9 @@ void isp_idle()
     ISP_TRIG = 0x00;
 }
 
-BYTE isp_read_byte(uint16_t addr)
+uint8_t isp_read_byte(uint16_t addr)
 {
-    BYTE dat = 0x00;
+    uint8_t dat = 0x00;
     ISP_CMD = ISP_Command_Read;
     SET_ADDR(ISP_ADDRL, ISP_ADDRH, addr);
     isp_trigger();
@@ -56,7 +48,7 @@ BYTE isp_read_byte(uint16_t addr)
     return dat;
 }
 
-bool isp_write_byte(uint16_t addr, BYTE dat)
+bool isp_write_byte(uint16_t addr, uint8_t dat)
 {
     CHECK_ADDR(addr);
     ISP_CMD = ISP_Command_Write;
@@ -74,3 +66,5 @@ bool isp_erase_sector(uint16_t addr)
     isp_trigger();
     return true;
 }
+
+#endif // COMPILE_ISP

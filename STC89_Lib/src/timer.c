@@ -1,5 +1,7 @@
 #include "timer.h"
 
+#if COMPILE_TIMER == 1
+
 void timer_init(TIM_NUM num, TIM_CONFIG *timer)
 {
     if (num == TIM_0)
@@ -30,6 +32,7 @@ void timer_init(TIM_NUM num, TIM_CONFIG *timer)
             nvic_set_priority(3, timer->priority);
         ET1 = timer->enable_int;
     }
+#ifdef STC89
     else if (num == TIM_2)
     {
         TR2 = 0;
@@ -50,6 +53,7 @@ void timer_init(TIM_NUM num, TIM_CONFIG *timer)
             nvic_set_priority(5, timer->priority);
         ET2 = timer->enable_int;
     }
+#endif
 }
 
 void timer_cmd(TIM_NUM tim, bool enable)
@@ -58,7 +62,9 @@ void timer_cmd(TIM_NUM tim, bool enable)
     {
         case TIM_0: TR0 = enable; break;
         case TIM_1: TR1 = enable; break;
+#ifdef STC89
         case TIM_2: TR2 = enable; break;
+#endif
         default: break;
     }
 }
@@ -69,7 +75,9 @@ bool timer_is_overflow(TIM_NUM tim)
     {
         case TIM_0: return (bool) TF0;
         case TIM_1: return (bool) TF1;
+#ifdef STC89
         case TIM_2: return (bool) TF2;
+#endif
         default: return false;
     }
 }
@@ -80,7 +88,9 @@ uint16_t timer_get_value(TIM_NUM tim)
     {
         case TIM_0: return (TH0 << 8) | TL0;
         case TIM_1: return (TH1 << 8) | TL1;
+#ifdef STC89
         case TIM_2: return (TH2 << 8) | TL2;
+#endif
         default: return 0x0000;
     }
 }
@@ -97,36 +107,14 @@ void timer_set_value(TIM_NUM tim, uint16_t value)
             TL1 = value;
             TH1 = value >> 8;
             break;
+#ifdef STC89
         case TIM_2:
             TL2 = value;
             TH2 = value >> 8;
             break;
+#endif
         default: break;
     }
 }
 
-void delay(WORD ms)
-{
-    BYTE i;
-    while (ms-- != 0)
-        for (i = 0; i < 91; i++);
-}
-
-void delays(WORD s)
-{
-    BYTE i, j, k;
-    while (s-- != 0)
-    {
-        i = 8, j = 1, k = 243;
-        _nop_();
-        do
-        {
-            do
-            {
-                while (--k);
-            }
-            while (--j);
-        }
-        while (--i);
-    }
-}
+#endif // COMPILE_TIMER
