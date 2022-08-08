@@ -37,7 +37,7 @@
 // 模式2: CPOL=1, CPHA=0
 // 模式3: CPOL=1, CPHA=1
 #ifndef SPI_MODE
-#error SPI_CS is not defined!
+#error SPI_MODE is not defined!
 #endif
 // CPOL(Clock POLarity): 时钟极性, 用来表示时钟信号在空闲时是高电平还是低电平, 0为低电平, 1为高电平
 #ifndef SPI_CPOL

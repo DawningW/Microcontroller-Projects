@@ -9,9 +9,10 @@
 #define __TIMER_H__
 
 #include "system.h"
-#include "exti.h"
 
 #if COMPILE_TIMER == 1
+
+#include "exti.h"
 
 // 1ms timer count
 #define T1MS (65536 - FOSC / CPI / 1000)

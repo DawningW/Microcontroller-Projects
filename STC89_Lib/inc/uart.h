@@ -9,10 +9,11 @@
 #define __UART_H__
 
 #include "system.h"
-#include "exti.h"
-#include "timer.h"
 
 #if COMPILE_UART == 1
+
+#include "exti.h"
+#include "timer.h"
 
 /**
  * @brief 串口接收回调函数的类型

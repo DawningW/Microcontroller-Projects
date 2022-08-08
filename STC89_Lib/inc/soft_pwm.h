@@ -13,6 +13,12 @@
 
 #if COMPILE_SOFT_PWM == 1
 
+#include "timer.h"
+
+void pwm_init();
+void pwm_set_duty(uint8_t duty);
+void pwm_cmd(bool enable);
+
 #endif // COMPILE_SOFT_PWM
 
 #endif // __SOFT_PWM_H__

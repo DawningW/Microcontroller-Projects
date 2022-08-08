@@ -88,12 +88,12 @@ void main()
     }
 }
 
-void exint1() interrupt 2
+EXINT1
 {
-    P36 = ~P36;
+   P36 = ~P36; 
 }
 
-void timer0() interrupt 1
+TIMER0
 {
     timer_set_value(TIM_0, T1MS);
     if (--timer_count == 0)

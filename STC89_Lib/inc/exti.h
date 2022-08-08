@@ -10,9 +10,10 @@
 #define __EXTI_H__
 
 #include "system.h"
-#include "nvic.h"
 
 #if COMPILE_EXTI == 1
+
+#include "nvic.h"
 
 /**
  * @brief 外部中断序号

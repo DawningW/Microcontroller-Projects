@@ -48,6 +48,8 @@ typedef unsigned char _Bool;
 #define false ((bool) 0)
 #define true ((bool) 1)
 #define __bool_true_false_are_defined 1
+// Replace inline with null
+#define inline
 
 #include <intrins.h>
 #define SBIT(name, addr, bit) sbit name = addr^bit
@@ -138,13 +140,13 @@ sbit IT2 = XICON^0;
 /**
  * @brief 延时指定毫秒后继续执行程序(不精确)
  * 
- * @param ms 毫秒
+ * @param ms 延时毫秒数
  */
 void delay(uint16_t ms);
 /**
  * @brief 延时指定秒后继续执行程序(不精确)
  * 
- * @param s 秒
+ * @param s 延时秒数
  */
 void sleep(uint16_t s);
 
