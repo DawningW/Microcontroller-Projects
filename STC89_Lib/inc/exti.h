@@ -1,6 +1,6 @@
 /**
  * @file exti.h
- * @author Wu Chen
+ * @author Chen Wu
  * @brief 外部中断
  * 
  * @copyright Copyright (c) 2020-2022

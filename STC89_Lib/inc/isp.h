@@ -1,6 +1,6 @@
 /**
  * @file isp.c
- * @author Wu Chen
+ * @author Chen Wu
  * @brief 内部EEPROM读写
  * 
  * @copyright Copyright (c) 2020-2022

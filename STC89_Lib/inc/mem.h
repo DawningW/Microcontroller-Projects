@@ -1,6 +1,6 @@
 /**
  * @file mem.h
- * @author Wu Chen
+ * @author Chen Wu
  * @brief 扩展RAM配置
  * 
  * @copyright Copyright (c) 2020-2022

@@ -1,6 +1,6 @@
 /**
  * @file nvic.h
- * @author Wu Chen
+ * @author Chen Wu
  * @brief 中断优先级控制
  * 
  * @copyright Copyright (c) 2020-2022

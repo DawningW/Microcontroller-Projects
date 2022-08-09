@@ -41,6 +41,7 @@
 // 详见soft_pwm.h
 #if COMPILE_SOFT_PWM == 1
 #define PWM_PIN P30
+#define PWM_TIMER 0
 #endif
 
 // 详见soft_i2c.h

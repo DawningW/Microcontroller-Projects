@@ -1,6 +1,6 @@
 /**
  * @file gpio.h
- * @author Wu Chen
+ * @author Chen Wu
  * @brief GPIO控制, 由于51单片机的GPIO均为准双向口, 无需配置直接读写相应寄存器位即可, 因此不建议使用此模块
  * 
  * @copyright Copyright (c) 2020-2022

@@ -1,6 +1,6 @@
 /**
  * @file wdt.h
- * @author Wu Chen
+ * @author Chen Wu
  * @brief 看门狗
  * 
  * @copyright Copyright (c) 2020-2022

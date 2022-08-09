@@ -1,6 +1,6 @@
 /**
  * @file timer.h
- * @author Wu Chen
+ * @author Chen Wu
  * @brief 定时器
  *
  * @copyright Copyright (c) 2020-2022
@@ -14,8 +14,10 @@
 
 #include "exti.h"
 
+// us to timer count
+#define US_TO_COUNT(bit_num, us) ((1 << (bit_num)) - FOSC / CPI / (1000000 / (us)))
 // 1ms timer count
-#define T1MS (65536 - FOSC / CPI / 1000)
+#define T1MS US_TO_COUNT(16, 1000)
 
 /**
  * @brief 定时器序号

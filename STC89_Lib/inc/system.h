@@ -1,6 +1,6 @@
 /**
  * @file system.h
- * @author Wu Chen
+ * @author Chen Wu
  * @brief 8051单片机设备系统
  * 
  * @copyright Copyright (c) 2020-2022

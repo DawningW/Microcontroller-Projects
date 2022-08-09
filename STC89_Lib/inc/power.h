@@ -1,6 +1,6 @@
 /**
  * @file power.h
- * @author Wu Chen
+ * @author Chen Wu
  * @brief 电源管理, 包括复位和省电模式
  * 
  * @copyright Copyright (c) 2020-2022

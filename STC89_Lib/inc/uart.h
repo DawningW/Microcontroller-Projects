@@ -1,6 +1,6 @@
 /**
  * @file uart.h
- * @author Wu Chen
+ * @author Chen Wu
  * @brief 通用异步收发器
  * 
  * @copyright Copyright (c) 2020-2022

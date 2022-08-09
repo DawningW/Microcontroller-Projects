@@ -27,7 +27,7 @@
 |uart|通用异步收发器|可用|
 |mem|扩展RAM|可用|
 |isp|内部EEPROM操作|可用|
-|soft_pwm|软件PWM|开发中|
+|soft_pwm|软件PWM|可用|
 |soft_i2c|软件I2C|待测试|
 |soft_spi|软件SPI|待测试|
 
