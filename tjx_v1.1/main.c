@@ -73,7 +73,7 @@ void main()
     init();
     puts("STC89C52RC");
     puts("System init successfully!");     // 末尾无需换行符
-    printf("%s is form printf\n", "This"); // 末尾需要加换行符
+    printf("%s is from printf\n", "This"); // 末尾需要加换行符
     for (pos = 1, next_char = helloworld; pos < MAX_DISPLAY_CHAR; pos++, next_char++)
     {
         if (*next_char == '\0') next_char = helloworld;

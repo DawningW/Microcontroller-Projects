@@ -1,6 +1,11 @@
 #include "1602A.h"
 #include "timer.h"
 
+static bool lcd_busy()
+{
+    return (bool) (lcd_read_state() & 0x80);
+}
+
 void lcd_init()
 {
     delay(15);
@@ -14,12 +19,9 @@ void lcd_init()
     delay(5);
     lcd_write_cmd(LCD_CMD_DISPLAY | 0x4 | 0x2); // 开启显示, 关闭光标, 不闪烁
     delay(5);
-    lcd_write_cmd(LCD_CMD_CLR);
-    delay(5);
     lcd_write_cmd(LCD_CMD_ENTRY | 0x2); // 光标右移, 字符不移位
     delay(5);
-    lcd_write_cmd(LCD_CMD_RST);
-    delay(5);
+    lcd_clear();
 }
 
 BYTE lcd_read(bit type)
@@ -47,11 +49,6 @@ BYTE lcd_read_dat()
     return lcd_read(1);
 }
 
-bool lcd_busy()
-{
-    return (bool) (lcd_read_state() & 0x80);
-}
-
 void lcd_write(bit type, BYTE content)
 {
     LCD_RS = type;
@@ -59,13 +56,13 @@ void lcd_write(bit type, BYTE content)
 #ifdef LCD_8BIT_DB
     LCD_DB = content;
 #else
-    LCD_DB &= 0x0F; //清高四位
-    LCD_DB |= (content & 0xF0); //送高四位
+    LCD_DB &= 0x0F; // 清高四位
+    LCD_DB |= (content & 0xF0); // 送高四位
     LCD_E = 1;
     _nop_();
     LCD_E = 0;
-    LCD_DB &= 0x0F; //清高四位
-    LCD_DB |= (content << 4); //送低四位
+    LCD_DB &= 0x0F; // 清高四位
+    LCD_DB |= (content << 4); // 送低四位
 #endif
     LCD_E = 1;
     _nop_();
@@ -84,18 +81,22 @@ void lcd_write_dat(BYTE dat)
     lcd_write(1, dat);
 }
 
-void lcd_write_cgram(BYTE pos, BYTE *arr)
+void lcd_write_cgram(BYTE pos, BYTE *glyph)
 {
     BYTE i;
     pos <<= 3; // pos *= 8, 获得地址
     pos |= 0x40; // 设定CGRAM地址命令
     for (i = 0; i < 8; i++)
     {
-        lcd_write_cmd(pos);
-        lcd_write_dat(*arr);
-        pos++;
-        arr++;
+        lcd_write_cmd(pos++);
+        lcd_write_dat(*glyph++);
     }
+}
+
+void lcd_clear()
+{
+    lcd_write_cmd(LCD_CMD_CLR);
+    lcd_write_cmd(LCD_CMD_RST);
 }
 
 void lcd_set_pos(bit row, BYTE col)

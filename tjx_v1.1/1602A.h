@@ -1,5 +1,5 @@
-#ifndef __LCD_1602A_h__
-#define __LCD_1602A_h__
+#ifndef __LCD_1602A_H__
+#define __LCD_1602A_H__
 
 #include "system.h"
 
@@ -44,24 +44,22 @@
 #define LCD_CMD_MODE 0x28 // 4位总线, 双行, 5x7点阵
 #endif
 
-// 初始化
+/**
+ * 初始化
+ */
 void lcd_init();
-/* 读数据
- * 状态字读操作：输入: RS=低、RW=高、E=高, 输出:读出状态字,
- * 数据读出操作：输入: RS=高、RW=高、E=高, 输出:读出为数据,
+/**
+ * 读数据
+ * 状态字读操作：输入: RS=低、RW=高、E=高, 输出:读出状态字
+ * 数据读出操作：输入: RS=高、RW=高、E=高, 输出:读出为数据
  */
 BYTE lcd_read(bit type);
 BYTE lcd_read_state(); // 不检查忙
 BYTE lcd_read_dat();
 /**
- * 检查LCD忙状态
- * 返回true时, 忙, 等待
- * 返回false时, 闲, 可写指令与数据
- */
-bool lcd_busy(); // 调用lcd_read_state()
-/* 写数据
- * 指令写入操作：输入: RS=低、RW=低、E=下降沿, 输出:无,
- * 数据写入操作：输入: RS=高、RW=低、E=下降沿, 输出:无.
+ * 写数据
+ * 指令写入操作：输入: RS=低、RW=低、E=下降沿, 输出:无
+ * 数据写入操作：输入: RS=高、RW=低、E=下降沿, 输出:无
  */
 void lcd_write(bit type, BYTE content);
 void lcd_write_cmd(BYTE cmd);
@@ -71,12 +69,15 @@ void lcd_write_dat(BYTE dat);
  * 无需处理地址
  * pos 0-7 写入自定义cgram中的位置
  */ 
-void lcd_write_cgram(BYTE pos, BYTE *arr);
+void lcd_write_cgram(BYTE pos, BYTE *glyph);
+/**
+ * 清空屏幕
+ */
+void lcd_clear();
 /**
  * 设定下一个要写的字符的地址(DDRAM)
  */
 void lcd_set_pos(bit row, BYTE col);
-// 输出
 /**
  * 在特定位置显示字符
  */
@@ -86,4 +87,5 @@ void lcd_disp(bit row, BYTE col, char ch);
  * 不要忘记字符数组末尾要有'\0'
  */
 void lcd_print(const char *str);
+
 #endif
