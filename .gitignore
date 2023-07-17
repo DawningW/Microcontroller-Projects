@@ -9,6 +9,9 @@ OBJ
 DebugConfig
 RTE
 *.uvgui.*
+Debug
+settings
+BuildLog.log
 .mxproject
 __Previews
 History

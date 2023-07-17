@@ -1,0 +1,516 @@
+diff -Nraupb naken_asm-2014-01-23/Makefile naken_asm-2014-01-23-patched/Makefile
+--- naken_asm-2014-01-23/Makefile	2014-01-23 19:06:24.000000000 -0800
++++ naken_asm-2014-01-23-patched/Makefile	2014-01-26 20:01:28.000000000 -0800
+@@ -11,6 +11,9 @@ include config.mak
+ 
+ vpath=asm:disasm:common:simulate
+ 
++CFLAGS+=-fprofile-generate -O4 -mtune=native -mcpu=native -march=native -fomit-frame-pointer
++#CFLAGS=-fprofile-use -O4 -mtune=native -mcpu=native -march=native -fomit-frame-pointer
++
+ default:
+ 	@+make -C build
+ 
+diff -Nraupb naken_asm-2014-01-23/simulate/simulate_msp430.c naken_asm-2014-01-23-patched/simulate/simulate_msp430.c
+--- naken_asm-2014-01-23/simulate/simulate_msp430.c	2014-01-23 19:06:24.000000000 -0800
++++ naken_asm-2014-01-23-patched/simulate/simulate_msp430.c	2014-01-28 16:56:48.000000000 -0800
+@@ -9,6 +9,10 @@
+  *
+  */
+ 
++static int debug_read = 0;
++static int debug_write = 0;
++static int trace_cmd = 1;
++
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <stdint.h>
+@@ -59,8 +63,10 @@ Status: V SCG1 SCG0 OSCOFF CPUOFF GIE N
+ #define CLEAR_N() simulate_msp430->reg[2]&=(0xffff^4);
+ #define CLEAR_Z() simulate_msp430->reg[2]&=(0xffff^2);
+ #define CLEAR_C() simulate_msp430->reg[2]&=(0xffff^1);
++#define CLEAR_RESERVED() simulate_msp430->reg[2]&=(0x01F);
+ 
+ #define AFFECTS_NZ(a) \
++	CLEAR_RESERVED();\
+   if (bw==0) \
+   { \
+     if (a&0x8000) { SET_N(); } else { CLEAR_N(); } \
+@@ -71,7 +77,23 @@ Status: V SCG1 SCG0 OSCOFF CPUOFF GIE N
+   } \
+   if (a==0) { SET_Z(); } else { CLEAR_Z(); }
+ 
++#define AFFECTS_Z(a)				\
++	CLEAR_RESERVED();\
++  if (a==0) { SET_Z(); } else { CLEAR_Z(); }
++
++#define AFFECTS_N(a) \
++	CLEAR_RESERVED();\
++  if (bw==0) \
++  { \
++    if (a&0x8000) { SET_N(); } else { CLEAR_N(); } \
++  } \
++    else \
++  { \
++    if (a&0x80) { SET_N(); } else { CLEAR_N(); } \
++  }
++
+ #define CHECK_CARRY(a) \
++	CLEAR_RESERVED();\
+   if (bw==0) \
+   { \
+     if ((a&0xffff0000)==0) { CLEAR_C(); } else { SET_C(); } \
+@@ -82,7 +104,8 @@ Status: V SCG1 SCG0 OSCOFF CPUOFF GIE N
+   }
+ 
+ #define CHECK_OVERFLOW() \
+-  if (bw==0) \
++	CLEAR_RESERVED();\
++	if (bw==0 || bw==1) 		\
+   { \
+     if (((((unsigned short int)dst)&0x8000)==(((unsigned short int)src)&0x8000)) && (((((unsigned short int)result)&0x8000))!=(((unsigned short int)dst)&0x8000))) { SET_V(); } else { CLEAR_V(); } \
+   } \
+@@ -92,6 +115,7 @@ Status: V SCG1 SCG0 OSCOFF CPUOFF GIE N
+   }
+ 
+ #define CHECK_OVERFLOW_WITH_C() \
++	CLEAR_RESERVED();\
+   if (bw==0) \
+   { \
+     if ((((int)dst+(int)src+GET_C())&0xffff0000)!=0) { SET_V(); } else { CLEAR_V(); } \
+@@ -102,6 +126,7 @@ Status: V SCG1 SCG0 OSCOFF CPUOFF GIE N
+   }
+ 
+ #define CHECK_Z() \
++	CLEAR_RESERVED();\
+   if (bw==0) \
+   { \
+     if (result&0x8000) { SET_N(); } else { CLEAR_N(); } \
+@@ -128,7 +153,7 @@ static void sp_inc(int *sp)
+ static unsigned short int get_data(struct _simulate *simulate, int reg, int As, int bw)
+ {
+ struct _simulate_msp430 *simulate_msp430=(struct _simulate_msp430 *)simulate->context;
+-
++	unsigned PC = simulate_msp430->reg[0] -2;
+   if (reg==3) // CG
+   {
+     if (As==0)
+@@ -162,6 +187,9 @@ struct _simulate_msp430 *simulate_msp430
+     if (As==1) // &LABEL
+     {
+       int PC=simulate_msp430->reg[0];
++      int addr = PC;
++      if (debug_read && addr >= 0x2600 && addr <= 0x2700)
++	      printf("PC=%04x READ &%04x\n", PC, addr);
+       uint16_t a=READ_RAM(PC)|(READ_RAM(PC+1)<<8);
+ 
+       simulate_msp430->reg[0]+=2;
+@@ -183,6 +211,11 @@ struct _simulate_msp430 *simulate_msp430
+     // This is probably worthless.. some other condition should pick this up
+     if (As==3) // #immediate
+     {
++
++	    int addr = simulate_msp430->reg[0];
++	    if (debug_read && addr >= 0x2600 && addr <= 0x2700)
++		    printf("PC=%04x READ &%04x\n", PC, addr);
++
+       uint16_t a=READ_RAM(simulate_msp430->reg[0])|(READ_RAM(simulate_msp430->reg[0]+1)<<8);
+ 
+       simulate_msp430->reg[0]+=2;
+@@ -197,6 +230,11 @@ struct _simulate_msp430 *simulate_msp430
+   {
+     uint16_t a=READ_RAM(simulate_msp430->reg[0])|(READ_RAM(simulate_msp430->reg[0]+1)<<8);
+     uint16_t index=simulate_msp430->reg[reg]+((int16_t)a);
++
++    int addr = index;
++    if (debug_read && addr >= 0x2600 && addr <= 0x2700)
++	    printf("PC=%04x READ &%04x\n", PC, addr);
++
+     simulate_msp430->reg[0]+=2;
+     if (bw==0)
+     { return READ_RAM(index)|(READ_RAM(index+1)<<8); }
+@@ -206,6 +244,10 @@ struct _simulate_msp430 *simulate_msp430
+     else
+   if (As==2) // @Rn
+   {
++	  int addr = simulate_msp430->reg[reg];
++	  if (debug_read && addr >= 0x2600 && addr <= 0x2700)
++		  printf("PC=%04x READ &%04x\n", PC, addr);
++
+     if (bw==0)
+     { return READ_RAM(simulate_msp430->reg[reg])|(READ_RAM(simulate_msp430->reg[reg]+1)<<8); }
+       else
+@@ -216,6 +258,10 @@ struct _simulate_msp430 *simulate_msp430
+   {
+     uint16_t index=simulate_msp430->reg[reg];
+ 
++    int addr = index;
++    if (debug_read && addr >= 0x2600 && addr <= 0x2700)
++	    printf("PC=%04x READ &%04x\n", PC, addr);
++
+     if (bw==0)
+     {
+       simulate_msp430->reg[reg]+=2;
+@@ -233,16 +279,21 @@ struct _simulate_msp430 *simulate_msp430
+   return 0;
+ }
+ 
++
+ static int put_data(struct _simulate *simulate, int PC, int reg, int Ad, int bw, unsigned int data)
+ {
+ struct _simulate_msp430 *simulate_msp430=(struct _simulate_msp430 *)simulate->context;
+ 
+   if (Ad==0) // Rn
+   {
+-    if (bw==0)
+-    { simulate_msp430->reg[reg]=data; }
+-      else
+-    {
++    if (bw==0) {
++	    simulate_msp430->reg[reg]=data;
++	    if (reg == 2 && data & 0x0010) {
++		    /* CPU OFF */
++		    printf("CPU OFF\n");
++		    //return -1;
++	    }
++    } else {
+       //simulate_msp430->reg[reg]&=0xff00;
+       //simulate_msp430->reg[reg]|=data&0xff;
+       simulate_msp430->reg[reg]=data&0xff;
+@@ -255,6 +306,9 @@ struct _simulate_msp430 *simulate_msp430
+     if (Ad==1) // &LABEL
+     {
+       uint16_t a=READ_RAM(PC)|(READ_RAM(PC+1)<<8);
++      if (debug_write)
++	      printf("pc=%04x %04x%s --> &%04x\n",
++		     PC-2, data, bw ? ".b" : "", a);
+ 
+       if (bw==0)
+       {
+@@ -272,6 +326,9 @@ struct _simulate_msp430 *simulate_msp430
+     if (Ad==1) // LABEL
+     {
+       uint16_t a=READ_RAM(PC)|(READ_RAM(PC+1)<<8);
++      if (debug_write)
++	      printf("pc=%04x %04x%s --> &%04x\n",
++		     PC-2, data, bw ? ".b" : "", a);
+ 
+       if (bw==0)
+       {
+@@ -291,6 +348,9 @@ struct _simulate_msp430 *simulate_msp430
+   {
+     uint16_t a=READ_RAM(PC)|(READ_RAM(PC+1)<<8);
+     int address=simulate_msp430->reg[reg]+((int16_t)a);
++      if (debug_write)
++	      printf("pc=%04x %04x%s --> &%04x\n",
++		     PC-2, data, bw ? ".b" : "", address);
+ 
+     if (bw==0)
+     {
+@@ -342,7 +402,8 @@ int pc;
+         else
+       { result=(c<<7)|(((unsigned char)src)>>1); }
+       put_data(simulate, pc, reg, As, bw, result);
+-      AFFECTS_NZ(result);
++      /* TODO: BUG */
++      //AFFECTS_NZ(result);
+       CLEAR_V();
+       break;
+     case 1:  // SWPB (no bw)
+@@ -354,33 +415,49 @@ int pc;
+     case 2:  // RRA
+       pc=simulate_msp430->reg[0];
+       src=get_data(simulate, reg, As, bw);
+-      if ((src&1)==1) { SET_C(); } else { CLEAR_C(); }
++      /* if ((src&1)==1) { */
++      /* 	      /\* TODO: Bug: ignoring carry*\/ */
++      /* 	      // SET_C(); */
++      /* 	      CLEAR_C(); */
++      /* } else { */
++      /* 	      CLEAR_C(); */
++      /* } */
+       if (bw==0)
+       { result=((short int)src)>>1; }
+         else
+       { result=((char)src)>>1; }
+       put_data(simulate, pc, reg, As, bw, result);
+-      AFFECTS_NZ(result);
++      // BUG
++      AFFECTS_Z(result);
+       CLEAR_V();
++      
+       break;
+     case 3:  // SXT (no bw)
+       pc=simulate_msp430->reg[0];
+       src=get_data(simulate, reg, As, bw);
+       result=(short int)((char)((unsigned char)src));
+       put_data(simulate, pc, reg, As, bw, result);
+-      AFFECTS_NZ(result);
++      // UNKNOWN
++      //AFFECTS_NZ(result);
+       CHECK_CARRY(result);
+       CLEAR_V();
+       break;
+     case 4:  // PUSH
+       simulate_msp430->reg[1]-=2;
+       src=get_data(simulate, reg, As, bw);
++      if (debug_write)
++	      printf("pc=%04x %04x%s --> &%04x (push)\n",
++		     simulate_msp430->reg[0]-2, src, bw ? ".b" : "", simulate_msp430->reg[1]);
+       WRITE_RAM(simulate_msp430->reg[1], src&0xff);
+       WRITE_RAM(simulate_msp430->reg[1]+1, src>>8);
+       break;
+     case 5:  // CALL (no bw)
+       src=get_data(simulate, reg, As, bw);
+       simulate_msp430->reg[1]-=2;
++      if (debug_write)
++	      printf("pc=%04x %04x%s --> &%04x (call)\n",
++		     simulate_msp430->reg[0]-2, simulate_msp430->reg[0], bw ? ".b" : "", simulate_msp430->reg[1]);
++      
+       WRITE_RAM(simulate_msp430->reg[1], simulate_msp430->reg[0]&0xff);
+       WRITE_RAM(simulate_msp430->reg[1]+1, simulate_msp430->reg[0]>>8);
+       simulate_msp430->reg[0]=src;
+@@ -477,31 +554,38 @@ unsigned int result;
+       src=get_data(simulate, src_reg, As, bw);
+       pc=simulate_msp430->reg[0];
+       dst=get_data(simulate, dst_reg, Ad, bw);
+-      result=(unsigned short int)dst+(unsigned short int)src;
++      result=(unsigned  int)dst+(unsigned  int)src;
++      // BUG
+       CHECK_OVERFLOW();
+       dst=result&0xffff;
+       put_data(simulate, pc, dst_reg, Ad, bw, dst);
+       AFFECTS_NZ(dst);
++      if (bw) {
++	      CLEAR_N();
++      }
+       CHECK_CARRY(result);
+       break;
+     case 6:  // ADDC
+       src=get_data(simulate, src_reg, As, bw);
+       pc=simulate_msp430->reg[0];
+       dst=get_data(simulate, dst_reg, Ad, bw);
+-      result=(unsigned short int)dst+(unsigned short int)src+GET_C();
++      result=(unsigned  int)dst+(unsigned  int)src+(unsigned)GET_C();
+       //CHECK_OVERFLOW_WITH_C();
+       CHECK_OVERFLOW();
+       dst=result&0xffff;
+       put_data(simulate, pc, dst_reg, Ad, bw, dst);
+       AFFECTS_NZ(dst);
+-      CHECK_CARRY(result)
++      if (bw) {
++	      CLEAR_N();
++      }
++      CHECK_CARRY(result);
+       break;
+     case 7:  // SUBC
+       src=get_data(simulate, src_reg, As, bw);
+       pc=simulate_msp430->reg[0];
+       dst=get_data(simulate, dst_reg, Ad, bw);
+       //src=~((unsigned short int)src)+1;
+-      src=((~((unsigned short int)src))&0xffff);
++      src=((~((unsigned int)src))&0xffff)+1;
+       //result=(unsigned short int)dst+(unsigned short int)src+GET_C();
+       // FIXME - Added GET_C().  Test it.
+       result=dst+src+GET_C();
+@@ -510,7 +594,11 @@ unsigned int result;
+       dst=result&0xffff;
+       put_data(simulate, pc, dst_reg, Ad, bw, dst);
+       AFFECTS_NZ(dst);
+-      CHECK_CARRY(result)
++      if (bw == 0) {
++	      CHECK_CARRY(result);
++      } else {
++	      CLEAR_C();
++      }
+       break;
+     case 8:  // SUB
+       src=get_data(simulate, src_reg, As, bw);
+@@ -523,46 +611,86 @@ unsigned int result;
+       dst=result&0xffff;
+       put_data(simulate, pc, dst_reg, Ad, bw, dst);
+       AFFECTS_NZ(dst);
++      if (bw == 0){
+       CHECK_CARRY(result)
++      } else {
++	      CLEAR_C();
++      }
+       break;
+     case 9:  // CMP
+       src=get_data(simulate, src_reg, As, bw);
+       pc=simulate_msp430->reg[0];
+       dst=get_data(simulate, dst_reg, Ad, bw);
+-      src=((~((unsigned short int)src))&0xffff)+1;
++      src=((~((unsigned  int)src))&0xffff)+1;
+       //result=(unsigned short int)dst+(unsigned short int)src;
+       result=dst+src;
+       CHECK_OVERFLOW();
+       dst=result&0xffff;
+       //put_data(simulate, pc, dst_reg, Ad, bw, dst);
+       AFFECTS_NZ(dst);
+-      CHECK_CARRY(result)
++      if (bw == 0) {
++	      CHECK_CARRY(result);
++      } else {
++	      CLEAR_C();
++      }
+       break;
+     case 10: // DADD
+       src=get_data(simulate, src_reg, As, bw);
+       pc=simulate_msp430->reg[0];
+       dst=get_data(simulate, dst_reg, Ad, bw);
+       result=src+dst+GET_C();
+-      if (bw==0)
+-      {
+-        int a;
+-        a=(src&0xf)+(dst&0xf)+GET_C();
+-        a=((((src>>4)&0xf)+((dst>>4)&0xf)+(a>>4))<<4)|(a&0xf);
+-        a=((((src>>8)&0xf)+((dst>>8)&0xf)+(a>>8))<<8)|(a&0xff);
+-        a=((((src>>12)&0xf)+((dst>>12)&0xf)+(a>>12))<<12)|(a&0xfff);
+-        if ((a&0xffff0000)!=0) { SET_C(); } else { CLEAR_C(); }
+-        result=a;
++      /* if (bw==0) */
++      /* { */
++      /*   int a; */
++      /*   a=(src&0xf)+(dst&0xf)+GET_C(); */
++      /*   a=((((src>>4)&0xf)+((dst>>4)&0xf)+(a>>4))<<4)|(a&0xf); */
++      /*   a=((((src>>8)&0xf)+((dst>>8)&0xf)+(a>>8))<<8)|(a&0xff); */
++      /*   a=((((src>>12)&0xf)+((dst>>12)&0xf)+(a>>12))<<12)|(a&0xfff); */
++      /*   if ((a&0xffff0000)!=0) { SET_C(); } else { CLEAR_C(); } */
++      /*   result=a; */
++      /* } */
++      /*   else */
++      /* { */
++      /*   int a; */
++      /*   a=(src&0xf)+(dst&0xf)+GET_C(); */
++      /*   a=((((src>>4)&0xf)+((dst>>4)&0xf)+(a>>4))<<4)|(a&0xf); */
++      /*   if ((a&0xffffff00)!=0) { SET_C(); } else { CLEAR_C(); } */
++      /*   result=a; */
++      /* } */
++      {
++#define GETD(v, s) (((v) >> (s*4)) & 0xF)
++	      /* printf("src: %d %d %d %d\n", */
++	      /* 	     GETD(src, 0), GETD(src, 1), */
++	      /* 	     GETD(src, 2), GETD(src, 3)); */
++	      /* printf("dst: %d %d %d %d\n", */
++	      /* 	     GETD(dst, 0), GETD(dst, 1), */
++	      /* 	     GETD(dst, 2), GETD(dst, 3)); */
++	      /* TODO: BUG : ignoring Carry! */
++	      unsigned a = GETD(src, 0) + GETD(dst, 0); //+GET_C();
++	      unsigned b = GETD(src, 1) + GETD(dst, 1) + (a > 9 ? 1 : 0);
++	      unsigned c = GETD(src, 2) + GETD(dst, 2) + (b > 9 ? 1 : 0);
++	      unsigned d = GETD(src, 3) + GETD(dst, 3) + (c > 9 ? 1 : 0);
++	      // printf("res: %d %d %d %d\n", a,b,c,d);
++	      a = a > 9 ? a - 10 : a;
++	      b = b > 9 ? b - 10 : b;
++	      c = c > 9 ? c - 10 : c;
++	      int car = d > 9;
++	      d = d > 9 ? d - 10 : d;
++	      //printf("res: %d %d %d %d\n", a,b,c,d);
++	      result = ((a&0xf)<<0) | ((b&0xf)<<4) | ((c&0xf)<<8) | ((d&0xf)<<12);
++	      result &= 0xffff;
++	      if (car) {// TODO this is worng
++	      	      SET_C();
++	      } else {
++	      	      CLEAR_C();
+       }
+-        else
+-      {
+-        int a;
+-        a=(src&0xf)+(dst&0xf)+GET_C();
+-        a=((((src>>4)&0xf)+((dst>>4)&0xf)+(a>>4))<<4)|(a&0xf);
+-        if ((a&0xffffff00)!=0) { SET_C(); } else { CLEAR_C(); }
+-        result=a;
++
+       }
++//      printf("DADD %04x %04x -> %04x\n", src, dst, result);
++
+       put_data(simulate, pc, dst_reg, Ad, bw, result);
+-      AFFECTS_NZ(result);
++      /* BUG */
++      //AFFECTS_NZ(result);
+       break;
+     case 11: // BIT (dest & src)
+       src=get_data(simulate, src_reg, As, bw);
+@@ -593,9 +721,11 @@ unsigned int result;
+       dst=get_data(simulate, dst_reg, Ad, bw);
+       result=src^dst;
+       put_data(simulate, pc, dst_reg, Ad, bw, result);
++      /* BUG */
+       AFFECTS_NZ(result);
+       if (result!=0) { SET_C(); } else { CLEAR_C(); }
+       if ((src&0x8000) && (dst&=0x8000)) { SET_V(); } else { CLEAR_V(); }
++      CLEAR_V();
+       break;
+     case 15: // AND
+       src=get_data(simulate, src_reg, As, bw);
+@@ -603,6 +733,7 @@ unsigned int result;
+       dst=get_data(simulate, dst_reg, Ad, bw);
+       result=src&dst;
+       put_data(simulate, pc, dst_reg, Ad, bw, result);
++      // UNKNOWN!!!
+       AFFECTS_NZ(result);
+       if (result!=0) { SET_C(); } else { CLEAR_C(); }
+       CLEAR_V();
+@@ -786,6 +917,8 @@ int n;
+   while(stop_running==0)
+   {
+     pc=simulate_msp430->reg[0];
++    unsigned opc = pc;
++//	  printf("pc=%04x\n", pc);
+     opcode=READ_RAM(pc)|(READ_RAM(pc+1)<<8);
+     c=get_cycle_count(opcode);
+     if (c>0) simulate->cycle_count+=c;
+@@ -807,6 +940,32 @@ int n;
+       ret=two_operand_exe(simulate, opcode);
+     }
+ 
++
++    if (trace_cmd && simulate->show == 0) {
++	    int num=(READ_RAM(pc+1)<<8)|READ_RAM(pc);
++        int cycles_min,cycles_max;
++	    disasm_msp430(simulate->memory, pc, instruction, &cycles_min, &cycles_max);
++	    printf("%04x: %04x %-40s %04x/%04x/%04x/%04x/%04x/%04x/%04x/%04x/%04x/%04x/%04x/%04x/%04x/%04x/%04x/%04x\n",
++		   opc, num, instruction,
++		   simulate_msp430->reg[0],
++		   simulate_msp430->reg[1],
++		   simulate_msp430->reg[2],
++		   simulate_msp430->reg[3],
++		   simulate_msp430->reg[4],
++		   simulate_msp430->reg[5],
++		   simulate_msp430->reg[6],
++		   simulate_msp430->reg[7],
++		   simulate_msp430->reg[8],
++		   simulate_msp430->reg[9],
++		   simulate_msp430->reg[10],
++		   simulate_msp430->reg[11],
++		   simulate_msp430->reg[12],
++		   simulate_msp430->reg[13],
++		   simulate_msp430->reg[14],
++		   simulate_msp430->reg[15]
++		    );
++    }
++
+     if (c>0) cycles+=c;
+ 
+     if (simulate->show==1)
+@@ -881,15 +1040,16 @@ int n;
+       return 0;
+     }
+ 
+-    if (simulate_msp430->reg[0]==0xffff)
++    if (simulate_msp430->reg[0]==0xffff ||  (simulate_msp430->reg[2] & 0x0010) == 0x10)
+     {
+-      printf("Function ended.  Total cycles: %d\n", simulate->cycle_count);
++      printf("CPU OFF Function ended.  Total cycles: %d\n", simulate->cycle_count);
+       simulate->step_mode=0;
+-      simulate_msp430->reg[0]=READ_RAM(0xfffe)|(READ_RAM(0xffff)<<8);
++      //simulate_msp430->reg[0]=READ_RAM(0xfffe)|(READ_RAM(0xffff)<<8);
+       signal(SIGINT, SIG_DFL);
+       return 0;
+     }
+ 
++    if (simulate->usec > 1000)
+     usleep(simulate->usec);
+   }
+ 
