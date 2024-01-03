@@ -1,5 +1,6 @@
 # exclude all
 .vscode
+__pycache__
 */build
 */Objects
 */Listings
