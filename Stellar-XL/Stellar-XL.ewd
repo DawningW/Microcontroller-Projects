@@ -426,7 +426,7 @@
                 </option>
                 <option>
                     <name>DynDriver</name>
-                    <state>SIM430</state>
+                    <state>430FET</state>
                 </option>
                 <option>
                     <name>dDllSlave</name>
@@ -442,7 +442,7 @@
                 </option>
                 <option>
                     <name>DdfFileName</name>
-                    <state></state>
+                    <state>$TOOLKIT_DIR$\config\debugger\msp430f149.ddf</state>
                 </option>
                 <option>
                     <name>ProcTMS</name>
@@ -580,7 +580,7 @@
                 </option>
                 <option>
                     <name>TargetVoltage</name>
-                    <state>###Uninitialized###</state>
+                    <state>3.3</state>
                 </option>
                 <option>
                     <name>AllowLockedFlashAccessP7</name>
@@ -641,7 +641,7 @@
                 </option>
                 <option>
                     <name>GPassword</name>
-                    <state>###Uninitialized###</state>
+                    <state></state>
                 </option>
                 <option>
                     <name>DebugLPM5</name>
@@ -673,7 +673,7 @@
                 </option>
                 <option>
                     <name>RadioJtagSpeedType</name>
-                    <state>1</state>
+                    <state>2</state>
                 </option>
                 <option>
                     <name>memoryTypeSlave</name>
