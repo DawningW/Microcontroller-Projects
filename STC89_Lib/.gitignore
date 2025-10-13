@@ -1,1 +1,32 @@
+# exclude all
 .vscode
+__pycache__
+*/build
+*/Objects
+*/Listings
+*/*/Objects
+*/*/Listings
+OBJ
+DebugConfig
+RTE
+*.uvgui.*
+Debug
+settings
+BuildLog.log
+.mxproject
+__Previews
+History
+Project Logs for *
+Project Outputs for *
+*.PrjPcbStructure
+
+# sourcecode
+!*.uvmpw
+!*.uvproj
+!*.uvopt
+!*.A51
+!*.h
+!*.c
+
+# executables
+!*.hex
